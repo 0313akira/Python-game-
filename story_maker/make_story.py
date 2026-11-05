@@ -147,7 +147,7 @@ def main():
     ap = argparse.ArgumentParser(description="オーダー表からインスタストーリー画像を作る")
     ap.add_argument("order", help="オーダー表のテキストファイル")
     ap.add_argument("-o", "--output", default="story.png")
-    ap.add_argument("-b", "--background", help="背景に薄く入れる画像（部のロゴなど）")
+    ap.add_argument("-b", "--background", help="背景に薄く入れる画像。省略すると北陸大学のロゴ、none でロゴなし")
     ap.add_argument("--font", help="使うフォントファイル")
     ap.add_argument("--size", type=int, help="文字サイズ（省略すると自動）")
     args = ap.parse_args()
@@ -155,7 +155,13 @@ def main():
     blocks = read_blocks(Path(args.order).read_text(encoding="utf-8"))
     if not blocks:
         sys.exit("オーダー表が空です。")
-    img = render(blocks, find_font(args.font), args.background, args.size)
+    bg = args.background
+    default_logo = Path(__file__).parent / "assets" / "hokuriku_logo.png"
+    if bg is None and default_logo.exists():
+        bg = str(default_logo)
+    elif bg == "none":
+        bg = None
+    img = render(blocks, find_font(args.font), bg, args.size)
     img.save(args.output)
     print(f"作成しました: {args.output}")
 
