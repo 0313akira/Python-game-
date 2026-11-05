@@ -1,0 +1,415 @@
+<title>卓球ストーリーメーカー</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap">
+<style>
+/* Layout: phone-first single column (写真 → 内容 → 完成画像). Wide screens: form left, sticky preview right. */
+:root {
+  --bg: #eef2f4;
+  --surface: #ffffff;
+  --ink: #15212b;
+  --muted: #5b6b78;
+  --line: #d5dde3;
+  --table: #17507a;      /* 卓球台の青 */
+  --table-ink: #ffffff;
+  --win: #d7262e;
+  --lose: #2c5fd6;
+  --font: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f171d; --surface: #18232c; --ink: #e7eef3; --muted: #93a4b1; --line: #2b3a45;
+    --table: #3d8ac4; --table-ink: #08131b; --win: #ff5a5f; --lose: #6f95ff; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f171d; --surface: #18232c; --ink: #e7eef3; --muted: #93a4b1; --line: #2b3a45;
+  --table: #3d8ac4; --table-ink: #08131b; --win: #ff5a5f; --lose: #6f95ff; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 40px;
+}
+.wrap { max-width: 1060px; margin: 0 auto; display: grid; gap: 20px; }
+header h1 { margin: 0; font-size: 1.5rem; font-weight: 900; letter-spacing: .02em; text-wrap: balance; }
+header p { margin: 4px 0 0; color: var(--muted); }
+.cols { display: grid; gap: 20px; }
+@media (min-width: 860px) {
+  .cols { grid-template-columns: minmax(0, 1fr) 360px; align-items: start; }
+  .preview { position: sticky; top: calc(16px + env(safe-area-inset-top, 0px)); }
+}
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.panel h2 { margin: 0; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+.step { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--table); color: var(--table-ink); font-size: .8rem; font-weight: 900; }
+.form { display: grid; gap: 20px; min-width: 0; }
+label { font-size: .8rem; color: var(--muted); font-weight: 700; display: grid; gap: 4px; }
+input[type=text], select {
+  font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+  padding: 8px 10px; width: 100%; min-width: 0;
+}
+input[type=text]:focus-visible, select:focus-visible, button:focus-visible, .drop:focus-within { outline: 2px solid var(--table); outline-offset: 2px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+button {
+  font: inherit; font-weight: 700; border-radius: 8px; padding: 10px 14px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+}
+button.primary { background: var(--table); color: var(--table-ink); border-color: var(--table); }
+button:disabled { opacity: .55; cursor: default; }
+.drop {
+  border: 2px dashed var(--line); border-radius: 10px; padding: 18px; text-align: center; cursor: pointer;
+  display: grid; gap: 6px; justify-items: center; color: var(--muted);
+}
+.drop strong { color: var(--ink); }
+.drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.thumbs { display: flex; gap: 8px; flex-wrap: wrap; }
+.thumbs img { height: 72px; border-radius: 6px; border: 1px solid var(--line); }
+.status { font-size: .9rem; margin: 0; min-height: 1.4em; }
+.status.err { color: var(--win); }
+.matches { display: grid; gap: 8px; }
+.match { display: grid; grid-template-columns: 22px minmax(0,1fr) 84px minmax(0,1fr) 28px; gap: 6px; align-items: center; }
+.match .no { font-weight: 900; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.match select { padding: 8px 4px; text-align: center; font-variant-numeric: tabular-nums; }
+.match .del { padding: 4px; border: none; background: none; color: var(--muted); font-size: 1.1rem; }
+.colhead { display: grid; grid-template-columns: 22px minmax(0,1fr) 84px minmax(0,1fr) 28px; gap: 6px; font-size: .75rem; color: var(--muted); font-weight: 700; }
+.colhead span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tally { font-weight: 900; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.tally .w { color: var(--win); } .tally .l { color: var(--lose); }
+.check { display: flex; gap: 8px; align-items: center; font-size: .9rem; color: var(--ink); font-weight: 400; }
+.preview canvas { width: 100%; height: auto; aspect-ratio: 9 / 16; border-radius: 12px; border: 1px solid var(--line); display: block; max-width: 100%; }
+.actions { display: grid; gap: 8px; }
+.hint { font-size: .8rem; color: var(--muted); margin: 0; }
+.example { font-size: .75rem; font-weight: 700; color: var(--table); background: color-mix(in srgb, var(--table) 12%, transparent); padding: 2px 8px; border-radius: 99px; }
+.saved-img { width: 100%; border-radius: 8px; }
+@media (max-width: 420px) {
+  .match, .colhead { grid-template-columns: 18px minmax(0,1fr) 70px minmax(0,1fr) 24px; gap: 4px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>卓球ストーリーメーカー</h1>
+    <p>オーダー用紙の写真を入れると、Claude が名前を読み取ってストーリー用の画像を作ります。試合が進んだらスコアを選ぶだけで更新できます。</p>
+  </header>
+
+  <div class="cols">
+    <div class="form">
+      <section class="panel">
+        <h2><span class="step">1</span>オーダー用紙の写真</h2>
+        <label for="ourTeam">自分のチーム名
+          <input type="text" id="ourTeam" value="北陸大学" autocomplete="off">
+        </label>
+        <label class="drop" id="drop">
+          <strong>写真を選ぶ・撮る</strong>
+          <span>両チームの用紙があれば一緒に選べます</span>
+          <input type="file" id="photo" accept="image/*" multiple>
+        </label>
+        <div class="thumbs" id="thumbs"></div>
+        <button class="primary" id="readBtn" disabled>写真からオーダーを読み取る</button>
+        <p class="status" id="readStatus" role="status"></p>
+      </section>
+
+      <section class="panel">
+        <h2><span class="step">2</span>内容の確認・スコア入力 <span class="example" id="exampleTag">例</span></h2>
+        <label for="round">見出し
+          <input type="text" id="round" autocomplete="off">
+        </label>
+        <div class="row2">
+          <label for="teamA">自チーム <input type="text" id="teamA" autocomplete="off"></label>
+          <label for="teamB">相手チーム <input type="text" id="teamB" autocomplete="off"></label>
+        </div>
+        <div class="colhead"><span></span><span id="headA">自チーム</span><span style="text-align:center">スコア</span><span id="headB">相手</span><span></span></div>
+        <div class="matches" id="matches"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between">
+          <button id="addBtn">＋ 試合を追加</button>
+          <span class="tally" id="tally"></span>
+        </div>
+        <label class="check" for="showResult"><input type="checkbox" id="showResult" checked> チームの結果（○3-0 など）を表示</label>
+      </section>
+
+      <section class="panel">
+        <h2><span class="step">3</span>背景のロゴ（任意）</h2>
+        <div class="row2">
+          <label class="drop" style="padding:12px">
+            <strong>ロゴ画像を選ぶ</strong>
+            <span>次回からも使われます</span>
+            <input type="file" id="logo" accept="image/*">
+          </label>
+          <button id="logoClear">ロゴを外す</button>
+        </div>
+      </section>
+    </div>
+
+    <aside class="panel preview">
+      <h2>完成画像</h2>
+      <canvas id="cv" width="1080" height="1920" aria-label="ストーリー画像のプレビュー"></canvas>
+      <div class="actions">
+        <button class="primary" id="saveBtn">画像を保存</button>
+        <p class="hint" id="saveHint">保存したらインスタのストーリーで画像を選ぶだけです。</p>
+        <img class="saved-img" id="fallbackImg" alt="完成したストーリー画像" hidden>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+const W = 1080, H = 1920;
+const FONT = '"Noto Sans JP", "Hiragino Sans", sans-serif';
+const SCORES = ["", "3-0", "3-1", "3-2", "2-3", "1-3", "0-3"];
+const $ = (id) => document.getElementById(id);
+
+// ---------- state ----------
+const EXAMPLE = {
+  round: "団体:一回戦", teamA: "北陸大学", teamB: "富山大学B", showResult: true,
+  matches: [
+    { a: "金澤", b: "望月", s: "3-0" }, { a: "中西", b: "下清水", s: "3-0" },
+    { a: "成川/守護", b: "大滝/佐藤", s: "3-0" }, { a: "田中", b: "芝田", s: "" }, { a: "成川", b: "佐藤", s: "" },
+  ],
+};
+let state = load("story-state") || structuredClone(EXAMPLE);
+let isExample = !load("story-state");
+let logoImg = null;
+
+function load(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }
+function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+
+// ---------- form ----------
+function fillForm() {
+  $("round").value = state.round; $("teamA").value = state.teamA; $("teamB").value = state.teamB;
+  $("showResult").checked = state.showResult;
+  const box = $("matches"); box.innerHTML = "";
+  state.matches.forEach((m, i) => {
+    const row = document.createElement("div"); row.className = "match";
+    const no = document.createElement("span"); no.className = "no"; no.textContent = i + 1;
+    const a = Object.assign(document.createElement("input"), { type: "text", value: m.a, id: "ma" + i, autocomplete: "off" });
+    a.setAttribute("aria-label", `${i + 1}番 自チーム`);
+    const s = document.createElement("select"); s.id = "ms" + i; s.setAttribute("aria-label", `${i + 1}番 スコア`);
+    SCORES.forEach(v => s.append(new Option(v || "未", v, false, v === m.s)));
+    const b = Object.assign(document.createElement("input"), { type: "text", value: m.b, id: "mb" + i, autocomplete: "off" });
+    b.setAttribute("aria-label", `${i + 1}番 相手`);
+    const del = Object.assign(document.createElement("button"), { className: "del", textContent: "×", title: "この試合を消す" });
+    a.oninput = () => { m.a = a.value; changed(); };
+    b.oninput = () => { m.b = b.value; changed(); };
+    s.onchange = () => { m.s = s.value; changed(); };
+    del.onclick = () => { state.matches.splice(i, 1); fillForm(); changed(); };
+    row.append(no, a, s, b, del); box.append(row);
+  });
+  syncHeads();
+}
+function syncHeads() {
+  $("headA").textContent = state.teamA || "自チーム";
+  $("headB").textContent = state.teamB || "相手";
+  $("exampleTag").hidden = !isExample;
+}
+["round", "teamA", "teamB"].forEach(k => $(k).addEventListener("input", e => { state[k] = e.target.value; changed(); }));
+$("showResult").onchange = e => { state.showResult = e.target.checked; changed(); };
+$("addBtn").onclick = () => { state.matches.push({ a: "", b: "", s: "" }); fillForm(); changed(); };
+$("ourTeam").value = load("story-team") || "北陸大学";
+$("ourTeam").oninput = e => store("story-team", e.target.value);
+
+function changed() { isExample = false; store("story-state", state); syncHeads(); draw(); }
+
+function tally() {
+  let w = 0, l = 0;
+  for (const m of state.matches) {
+    if (!m.s) continue;
+    const [x, y] = m.s.split("-").map(Number);
+    x > y ? w++ : l++;
+  }
+  return { w, l };
+}
+
+// ---------- text blocks (same layout as the Python version) ----------
+function blocks() {
+  const out = [];
+  if (state.round.trim()) out.push([state.round.trim()]);
+  const head = [`${state.teamA}vs${state.teamB}`];
+  const { w, l } = tally();
+  const need = Math.floor(state.matches.length / 2) + 1;
+  if (state.showResult && (w || l)) {
+    const mark = w >= need ? "○" : l >= need ? "×" : "";
+    head.push(`${mark}${w}-${l}`);
+  }
+  out.push(head);
+  const ms = state.matches.map((m, i) => `${i + 1}.${m.a}${m.s || " - "}${m.b}`);
+  if (ms.length) out.push(ms);
+  const t = $("tally");
+  t.innerHTML = (w || l) ? `<span class="${w >= l ? "w" : "l"}">${w}勝${l}敗</span>` : "";
+  return out;
+}
+
+// ---------- drawing ----------
+const cv = $("cv"), ctx = cv.getContext("2d");
+function rr(x0, y0, x1, y1, r) {
+  ctx.beginPath();
+  ctx.moveTo(x0 + r, y0); ctx.arcTo(x1, y0, x1, y1, r); ctx.arcTo(x1, y1, x0, y1, r);
+  ctx.arcTo(x0, y1, x0, y0, r); ctx.arcTo(x0, y0, x1, y0, r); ctx.closePath(); ctx.fill();
+}
+const isWin = ch => "○〇●".includes(ch), isLose = ch => "×✕".includes(ch);
+function charWidth(ch) { return (isWin(ch) || isLose(ch)) ? parseFloat(ctx.font.split(" ")[1]) * 1.0 : ctx.measureText(ch).width; }
+function lineWidth(line) { let w = 0; for (const ch of line) w += charWidth(ch); return w; }
+
+function draw() {
+  const bl = blocks();
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, "#f4f4f4"); g.addColorStop(1, "#dedede");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  if (logoImg) {
+    const sc = Math.min(W * 0.9 / logoImg.width, H * 0.6 / logoImg.height);
+    const lw = logoImg.width * sc, lh = logoImg.height * sc;
+    ctx.save(); ctx.globalAlpha = 0.35; ctx.filter = "blur(2px)";
+    ctx.drawImage(logoImg, (W - lw) / 2, (H - lh) / 2, lw, lh); ctx.restore();
+  }
+  const lines = bl.flat();
+  if (!lines.length) return;
+  let size = 96;
+  for (; size > 30; size -= 2) {
+    ctx.font = `900 ${size}px ${FONT}`;
+    const widest = Math.max(...lines.map(lineWidth));
+    const total = lines.length * size * 1.22 + (bl.length - 1) * size * 0.9;
+    if (widest <= W - 200 && total <= H * 0.72) break;
+  }
+  ctx.font = `900 ${size}px ${FONT}`;
+  const lineH = Math.round(size * 1.22), gap = Math.round(size * 0.9);
+  const padX = size * 0.35, padY = size * 0.18, rad = size * 0.28;
+  let y = (H - (lines.length * lineH + (bl.length - 1) * gap)) / 2;
+  ctx.textBaseline = "middle";
+  for (const block of bl) {
+    ctx.fillStyle = "#000";
+    block.forEach((line, i) => {
+      const tw = lineWidth(line), ly = y + i * lineH;
+      rr((W - tw) / 2 - padX, ly - (i === 0 ? padY : 0), (W + tw) / 2 + padX, ly + lineH + (i === block.length - 1 ? padY : 0), rad);
+    });
+    for (const line of block) {
+      let x = (W - lineWidth(line)) / 2;
+      const cy = y + lineH / 2;
+      for (const ch of line) {
+        const cw = charWidth(ch);
+        if (isWin(ch)) {
+          ctx.strokeStyle = "#e60012"; ctx.lineWidth = Math.max(4, size / 9);
+          ctx.beginPath(); ctx.arc(x + cw / 2 - size * 0.04, cy, size * 0.38, 0, Math.PI * 2); ctx.stroke();
+        } else if (isLose(ch)) {
+          const r = size * 0.34; ctx.strokeStyle = "#1e5ae6"; ctx.lineWidth = Math.max(4, size / 9); ctx.lineCap = "round";
+          ctx.beginPath(); ctx.moveTo(x + cw / 2 - r, cy - r); ctx.lineTo(x + cw / 2 + r, cy + r);
+          ctx.moveTo(x + cw / 2 - r, cy + r); ctx.lineTo(x + cw / 2 + r, cy - r); ctx.stroke();
+        } else {
+          ctx.fillStyle = "#fff"; ctx.fillText(ch, x, cy);
+        }
+        x += cw;
+      }
+      y += lineH;
+    }
+    y += gap;
+  }
+}
+
+// ---------- logo ----------
+function setLogo(url) {
+  if (!url) { logoImg = null; draw(); return; }
+  const img = new Image(); img.onload = () => { logoImg = img; draw(); }; img.src = url;
+}
+$("logo").onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const img = new Image();
+  img.onload = () => {
+    const sc = Math.min(1, 900 / Math.max(img.width, img.height));
+    const c = document.createElement("canvas"); c.width = img.width * sc; c.height = img.height * sc;
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    const url = c.toDataURL("image/png");
+    try { localStorage.setItem("story-logo", url); } catch {}
+    setLogo(url); URL.revokeObjectURL(img.src);
+  };
+  img.src = URL.createObjectURL(f);
+};
+$("logoClear").onclick = () => { try { localStorage.removeItem("story-logo"); } catch {} setLogo(null); };
+
+// ---------- reading the order sheet with Claude ----------
+let files = [], sample = null, ctl = null;
+$("photo").onchange = e => {
+  files = [...e.target.files];
+  const t = $("thumbs"); t.innerHTML = "";
+  files.forEach(f => { const im = new Image(); im.src = URL.createObjectURL(f); im.alt = f.name; t.append(im); });
+  $("readBtn").disabled = !files.length || !sample;
+  status(files.length ? `${files.length}枚選びました。` : "");
+};
+function status(msg, err) { const s = $("readStatus"); s.textContent = msg; s.className = "status" + (err ? " err" : ""); }
+
+const ERR = {
+  not_granted: "Claude の利用が許可されていないため読み取れません。名前は手で入力してください。",
+  sampling_disabled: "このアカウントでは Claude を使えません。名前は手で入力してください。",
+  images_unavailable: "この画面では写真を送れません。名前は手で入力してください。",
+  image_rejected: "この写真は読み込めませんでした。別の写真で試してください。",
+  rate_limited: "少し時間をおいてからもう一度押してください。",
+  invalid_json: "うまく読み取れませんでした。もう一度押すか、明るい写真で試してください。",
+  refused: "この写真は読み取れませんでした。",
+};
+
+$("readBtn").onclick = async () => {
+  if (!files.length || !sample) return;
+  const our = $("ourTeam").value.trim();
+  $("readBtn").disabled = true; status("読み取り中…（数十秒かかることがあります）");
+  ctl = new AbortController();
+  const prompt = `添付は卓球の団体戦のオーダー用紙の写真です（1〜2枚）。書かれている内容を読み取り、次の形の JSON だけを返してください。
+{"round": string, "teamA": string, "teamB": string, "matches": [{"a": string, "b": string}], "notes": string}
+ルール:
+- 自分のチームは「${our || "（不明）"}」です。自分のチームを teamA、相手を teamB にし、各試合の a に自分のチームの選手、b に相手の選手を入れる。
+- 用紙が片方のチームの分しかなければ、もう片方のチーム名と選手名は空文字 "" にする。
+- matches は試合の順番どおり（1番から）。ダブルスは「成川/守護」のように / でつなぐ。
+- 選手名は用紙の表記どおり（ふつうは名字だけ）。空白は入れない。
+- round は「一回戦」「準決勝」などが読み取れれば「団体:一回戦」の形、わからなければ ""。
+- チーム名は用紙の表記どおり（「北陸大学B」など）。
+- 読みに自信がない文字があれば notes に日本語で短く書く。なければ ""。`;
+  try {
+    const r = await sample.json(prompt, { images: files, signal: ctl.signal });
+    const ms = Array.isArray(r?.matches) ? r.matches : [];
+    if (!ms.length) throw { code: "invalid_json" };
+    const old = state;
+    state = {
+      round: String(r.round || "") || old.round,
+      teamA: String(r.teamA || "") || our || old.teamA,
+      teamB: String(r.teamB || ""),
+      showResult: old.showResult,
+      matches: ms.map(m => ({ a: String(m.a || ""), b: String(m.b || ""), s: "" })),
+    };
+    isExample = false; store("story-state", state); fillForm(); draw();
+    status(r.notes ? `読み取りました。確認してください：${r.notes}` : "読み取りました。名前を確認してください。");
+  } catch (e) {
+    if (e?.code !== "cancelled") status(ERR[e?.code] || "読み取りに失敗しました。もう一度押してください。", true);
+  } finally {
+    $("readBtn").disabled = !files.length;
+  }
+};
+
+// ---------- saving ----------
+let downloads = null;
+$("saveBtn").onclick = () => {
+  cv.toBlob(async blob => {
+    const name = `${state.round || "story"}_${state.teamB || ""}.png`.replace(/[\\/:*?"<>|]/g, "_");
+    if (downloads) {
+      try { await downloads.save({ filename: name, data: blob }); $("saveHint").textContent = "保存しました。インスタのストーリーで画像を選んでください。"; return; }
+      catch (e) { if (e?.code === "declined") return; }
+    }
+    const img = $("fallbackImg"); img.src = URL.createObjectURL(blob); img.hidden = false;
+    $("saveHint").textContent = "下の画像を長押し（または右クリック）して保存してください。";
+  }, "image/png");
+};
+
+// ---------- boot ----------
+fillForm();
+draw();
+document.fonts.load(`900 80px "Noto Sans JP"`, "団体戦北陸大学").then(draw).catch(() => {});
+try { const l = localStorage.getItem("story-logo"); if (l) setLogo(l); } catch {}
+(async () => {
+  if (!window.claude) { status("写真の読み取りは claude.ai で開いたときに使えます。名前は手で入力できます。"); return; }
+  const [s, d] = await Promise.all([claude.use("sample"), claude.use("downloads")]);
+  downloads = d;
+  if (!s) { status("この画面では写真の読み取りが使えません。名前は手で入力できます。"); return; }
+  const lim = await s.limits().catch(() => null);
+  if (!lim?.images) { status("この画面では写真を送れません。名前は手で入力できます。"); return; }
+  sample = s;
+  $("readBtn").disabled = !files.length;
+})();
+</script>
