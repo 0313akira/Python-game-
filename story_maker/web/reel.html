@@ -12,10 +12,10 @@
   --ink: #122330;
   --muted: #5d6e7b;
   --line: #d3dce3;
-  --table: #134a77;
-  --table-deep: #0c3354;
+  --table: #1d5c3a;
+  --table-deep: #0f3a24;
   --on-table: #ffffff;
-  --ball: #f28a1e;
+  --ball: #c9a032;
   --err: #d7262e;
   --font: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
   --num: "Oswald", "Noto Sans JP", sans-serif;
@@ -23,13 +23,13 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #0d151b; --surface: #16212a; --ink: #e6edf2; --muted: #91a2af;
-    --line: #283843; --table: #1d5d93; --table-deep: #12405f; --on-table: #ffffff; --ball: #ff9d3d; --err: #ff5a5f;
+    --line: #283843; --table: #2a7a4e; --table-deep: #164a2f; --on-table: #ffffff; --ball: #e0bb4a; --err: #ff5a5f;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0d151b; --surface: #16212a; --ink: #e6edf2; --muted: #91a2af;
-  --line: #283843; --table: #1d5d93; --table-deep: #12405f; --on-table: #ffffff; --ball: #ff9d3d; --err: #ff5a5f;
+  --line: #283843; --table: #2a7a4e; --table-deep: #164a2f; --on-table: #ffffff; --ball: #e0bb4a; --err: #ff5a5f;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -48,7 +48,7 @@ body {
 .hero::before { content: ""; position: absolute; left: 50%; top: 5px; bottom: 5px; width: 3px; background: rgba(255,255,255,.35); transform: translateX(-50%); }
 .hero::after {
   content: ""; position: absolute; width: 34px; height: 34px; border-radius: 50%; right: 26px; top: 22px;
-  background: radial-gradient(circle at 35% 30%, #ffd3a1, var(--ball) 55%, #c8650a); box-shadow: 0 6px 14px rgba(0,0,0,.25);
+  background: radial-gradient(circle at 35% 30%, #fff2c4, var(--ball) 55%, #8f6d16); box-shadow: 0 6px 14px rgba(0,0,0,.25);
 }
 .hero > * { position: relative; }
 .hero .eyebrow { font-family: var(--num); letter-spacing: .18em; font-size: .78rem; opacity: .8; text-transform: uppercase; }
@@ -66,7 +66,7 @@ body {
 .panel h2 { margin: 0; font-size: 1.02rem; font-weight: 900; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .step {
   font-family: var(--num); font-weight: 700; font-size: .85rem; display: inline-grid; place-items: center;
-  width: 28px; height: 28px; border-radius: 50%; color: #fff; background: radial-gradient(circle at 35% 30%, #ffc98f, var(--ball) 60%);
+  width: 28px; height: 28px; border-radius: 50%; color: #fff; background: radial-gradient(circle at 35% 30%, #f3dc8e, var(--ball) 60%);
 }
 label { font-size: .78rem; color: var(--muted); font-weight: 700; display: grid; gap: 4px; }
 input[type=text] {
@@ -159,10 +159,9 @@ video { display: none; }
       </section>
 
       <section class="panel">
-        <h2><span class="step">3</span>色とロゴ</h2>
-        <div class="swrow"><label>自チームの選手名の色</label><div class="swatches" id="swA"></div></div>
+        <h2><span class="step">3</span>相手の色とロゴ</h2>
+        <p class="hint">北陸大学の選手名・チーム名・ラインは、ロゴに合わせた緑と金で固定です。</p>
         <div class="swrow"><label>相手の選手名の色</label><div class="swatches" id="swB"></div></div>
-        <div class="swrow"><label>ライン（帯の線）の色</label><div class="swatches" id="swL"></div></div>
         <div class="logo-row">
           <label class="drop" style="padding:12px">
             <strong style="font-size:.9rem">部のロゴを入れる</strong>
@@ -200,7 +199,8 @@ const W = 1080, H = 1920;
 const JP = '"Noto Sans JP", "Hiragino Sans", sans-serif';
 const MIN = '"Shippori Mincho B1", "Hiragino Mincho ProN", serif';
 const BRUSH = '"Yuji Syuku", "Shippori Mincho B1", serif';
-const COLORS = ["#e8202a", "#d4af37", "#2fa866", "#ff8a1f", "#ffd23f", "#3d8bff", "#d23cff", "#ffffff"];
+const COLORS = ["#ffffff", "#e8202a", "#3d8bff", "#d23cff", "#ff8a1f", "#ffd23f"];
+const OUR = "#3cbf73", LINE = "#2f9e5f", GOLD = "#d4af37"; // 北陸大学の緑と金（固定）
 const $ = (id) => document.getElementById(id);
 
 function load(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }
@@ -208,7 +208,7 @@ function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch
 const DEFAULT = {
   pA: "金澤", pB: "望月", sub: "北信越リーグ 一回戦",
   team: "北陸大学卓球部", teamEn: "Hokuriku University Table Tennis Team",
-  colA: "#e8202a", colB: "#3d8bff", colL: "#d4af37",
+  colB: "#ffffff",
 };
 const s = Object.assign({}, DEFAULT, load("reel-state") || {});
 let logoImg = null;
@@ -229,7 +229,7 @@ function swatches(boxId, key) {
   const sync = () => box.querySelectorAll(".sw").forEach(b => b.setAttribute("aria-pressed", b.dataset.c === s[key]));
   sync();
 }
-swatches("swA", "colA"); swatches("swB", "colB"); swatches("swL", "colL");
+swatches("swB", "colB");
 
 // ---------- drawing ----------
 const cv = $("cv"), ctx = cv.getContext("2d");
@@ -265,7 +265,7 @@ function drawFrame() {
   ctx.textBaseline = "middle"; ctx.textAlign = "left";
 
   // ---- 上の帯：選手 vs 選手 ----
-  band(170, s.colA); band(560, s.colA);
+  band(170, LINE); band(560, LINE);
   const vs = " vs ";
   ctx.font = `800 108px ${MIN}`;
   const a = s.pA || "", b = s.pB || "";
@@ -280,7 +280,7 @@ function drawFrame() {
   ctx.font = `700 ${size * 0.6}px "Oswald", sans-serif`; const wv = ctx.measureText(vs).width;
   let x = (W - (wa + wv + wb)) / 2;
   const ny = 300;
-  ctx.font = `800 ${size}px ${MIN}`; glowText(a, x, ny, s.colA); x += wa;
+  ctx.font = `800 ${size}px ${MIN}`; glowText(a, x, ny, OUR); x += wa;
   ctx.font = `700 ${size * 0.6}px "Oswald", sans-serif`; ctx.fillStyle = "#ffffff"; ctx.fillText(vs, x, ny + size * 0.06); x += wv;
   ctx.font = `800 ${size}px ${MIN}`; glowText(b, x, ny, s.colB);
   // 見出し
@@ -289,7 +289,7 @@ function drawFrame() {
   ctx.save(); ctx.shadowColor = "rgba(0,0,0,.6)"; ctx.shadowBlur = 10; ctx.fillText(s.sub || "", W / 2, 445); ctx.restore();
 
   // ---- 動画 ----
-  band(VID_Y - 22, s.colL); band(VID_Y + VID_H + 12, s.colL);
+  band(VID_Y - 22, GOLD); band(VID_Y + VID_H + 12, GOLD);
   if (vid.readyState >= 2 && vid.videoWidth) {
     const vw = vid.videoWidth, vh = vid.videoHeight;
     const sc = Math.max(W / vw, VID_H / vh) * zoom; // 枠いっぱい（はみ出しは切る）
@@ -299,7 +299,7 @@ function drawFrame() {
     ctx.restore();
   } else {
     // 動画がまだないとき：卓球台の絵
-    ctx.fillStyle = "#123f66"; ctx.fillRect(0, VID_Y, W, VID_H);
+    ctx.fillStyle = "#123f2a"; ctx.fillRect(0, VID_Y, W, VID_H);
     ctx.strokeStyle = "rgba(255,255,255,.85)"; ctx.lineWidth = 8; ctx.strokeRect(120, VID_Y + 110, W - 240, VID_H - 220);
     ctx.beginPath(); ctx.moveTo(W / 2, VID_Y + 110); ctx.lineTo(W / 2, VID_Y + VID_H - 110); ctx.stroke();
     ctx.fillStyle = "rgba(255,255,255,.75)"; ctx.font = `700 44px ${JP}`; ctx.fillText("ここにプレー動画が入ります", W / 2, VID_Y + 60);
@@ -318,11 +318,11 @@ function drawFrame() {
     ctx.drawImage(logoImg, tx + (logoSize - logoImg.width * sc) / 2, ty - logoImg.height * sc / 2, logoImg.width * sc, logoImg.height * sc);
     tx += logoSize + 30;
   }
-  ctx.fillStyle = "#ffffff"; ctx.fillText(s.team || "", tx, ty);
-  ctx.textAlign = "center"; ctx.fillStyle = "rgba(255,255,255,.75)";
+  ctx.fillStyle = OUR; ctx.fillText(s.team || "", tx, ty);
+  ctx.textAlign = "center"; ctx.fillStyle = GOLD;
   fit(s.teamEn || "", 500, '"Shippori Mincho B1", serif', 34, W - 200);
   ctx.save(); ctx.letterSpacing = "2px"; ctx.fillText(s.teamEn || "", W / 2, ty + 110); ctx.restore();
-  band(ty + 170, s.colA);
+  band(ty + 170, LINE);
   ctx.restore();
 }
 let drawing = false;

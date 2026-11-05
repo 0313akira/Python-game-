@@ -12,10 +12,10 @@
   --ink: #122330;
   --muted: #5d6e7b;
   --line: #d3dce3;
-  --table: #134a77;        /* 卓球台の青 */
-  --table-deep: #0c3354;
+  --table: #1d5c3a;        /* 北陸大学の緑 */
+  --table-deep: #0f3a24;
   --on-table: #ffffff;
-  --ball: #f28a1e;         /* オレンジのボール */
+  --ball: #c9a032;         /* ロゴの金 */
   --win: #d7262e;
   --font: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
   --num: "Oswald", "Noto Sans JP", sans-serif;
@@ -23,13 +23,13 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #0d151b; --surface: #16212a; --ink: #e6edf2; --muted: #91a2af;
-    --line: #283843; --table: #1d5d93; --table-deep: #12405f; --on-table: #ffffff; --ball: #ff9d3d; --win: #ff5a5f;
+    --line: #283843; --table: #2a7a4e; --table-deep: #164a2f; --on-table: #ffffff; --ball: #e0bb4a; --win: #ff5a5f;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0d151b; --surface: #16212a; --ink: #e6edf2; --muted: #91a2af;
-  --line: #283843; --table: #1d5d93; --table-deep: #12405f; --on-table: #ffffff; --ball: #ff9d3d; --win: #ff5a5f;
+  --line: #283843; --table: #2a7a4e; --table-deep: #164a2f; --on-table: #ffffff; --ball: #e0bb4a; --win: #ff5a5f;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -52,7 +52,7 @@ body {
 }
 .hero::after { /* ボール */
   content: ""; position: absolute; width: 34px; height: 34px; border-radius: 50%; right: 26px; top: 22px;
-  background: radial-gradient(circle at 35% 30%, #ffd3a1, var(--ball) 55%, #c8650a);
+  background: radial-gradient(circle at 35% 30%, #fff2c4, var(--ball) 55%, #8f6d16);
   box-shadow: 0 6px 14px rgba(0,0,0,.25);
 }
 .hero > * { position: relative; }
@@ -73,7 +73,7 @@ body {
 .step {
   font-family: var(--num); font-weight: 700; font-size: .85rem; display: inline-grid; place-items: center;
   width: 28px; height: 28px; border-radius: 50%; color: #fff;
-  background: radial-gradient(circle at 35% 30%, #ffc98f, var(--ball) 60%);
+  background: radial-gradient(circle at 35% 30%, #f3dc8e, var(--ball) 60%);
 }
 label { font-size: .78rem; color: var(--muted); font-weight: 700; display: grid; gap: 4px; }
 input[type=text], select {
@@ -189,8 +189,8 @@ button:disabled { opacity: .5; cursor: default; }
       <section class="panel">
         <h2><span class="step">3</span>デザインを選ぶ</h2>
         <div class="tpls" id="tpls" role="group" aria-label="デザイン"></div>
-        <label>チームカラー</label>
-        <div class="swatches" id="swatches" role="group" aria-label="チームカラー"></div>
+        <label>相手チームの色 <span style="font-weight:400">（自チームは緑で固定）</span></label>
+        <div class="swatches" id="swatches" role="group" aria-label="相手チームの色"></div>
         <div class="logo-row">
           <label class="drop" style="padding:12px">
             <strong style="font-size:.9rem">部のロゴを入れる</strong>
@@ -223,9 +223,13 @@ const W = 1080, H = 1920;
 const JP = '"Noto Sans JP", "Hiragino Sans", sans-serif';
 const NUM = '"Oswald", "Noto Sans JP", sans-serif';
 const SCORES = ["", "3-0", "3-1", "3-2", "2-3", "1-3", "0-3"];
-const COLORS = ["#c8102e", "#1d5c3a", "#b8902f", "#e60012", "#f08300", "#1e5ae6", "#7b3fe4", "#222222"];
+// 自チーム（北陸大学）はロゴの緑と金で固定。相手チームの色だけ選べる。"ink" = 白（暗い背景）／黒（明るい背景）
+const OUR = { dark: "#3cbf73", light: "#1d6b3e", box: "#3cbf73" };
+const GOLD = { dark: "#e0bb4a", light: "#b8902f" };
+const OPP_COLORS = ["ink", "#e0303a", "#2f6fe0", "#8a4be0", "#f08300", "#e4007f"];
+const oppColor = (inkColor) => (!state.opp || state.opp === "ink") ? inkColor : state.opp;
 const TEMPLATES = [
-  { id: "court", name: "コート" },
+  { id: "court", name: "グリーン" },
   { id: "white", name: "ホワイト" },
   { id: "classic", name: "クラシック" },
 ];
@@ -234,7 +238,7 @@ const $ = (id) => document.getElementById(id);
 // ---------- state ----------
 const EXAMPLE = {
   round: "団体:一回戦", event: "夏季2026", teamA: "北陸大学", teamB: "富山大学B", showResult: true,
-  template: "court", color: "#c8102e",
+  template: "court", opp: "ink",
   matches: [
     { a: "金澤", b: "望月", s: "3-0" }, { a: "中西", b: "下清水", s: "3-0" },
     { a: "成川/守護", b: "大滝/佐藤", s: "3-0" }, { a: "田中", b: "芝田", s: "" }, { a: "成川", b: "佐藤", s: "" },
@@ -278,7 +282,7 @@ function syncUI() {
   const { w, l } = tally();
   $("tally").textContent = (w || l) ? `${w}勝 ${l}敗` : "";
   document.querySelectorAll(".tpl").forEach(b => b.setAttribute("aria-pressed", b.dataset.id === state.template));
-  document.querySelectorAll(".sw").forEach(b => b.setAttribute("aria-pressed", b.dataset.c === state.color));
+  document.querySelectorAll(".sw").forEach(b => b.setAttribute("aria-pressed", b.dataset.c === (state.opp || "ink")));
 }
 ["round", "event", "teamA", "teamB"].forEach(k => $(k).addEventListener("input", e => { state[k] = e.target.value; changed(); }));
 $("showResult").onchange = e => { state.showResult = e.target.checked; changed(); };
@@ -333,24 +337,27 @@ function draw(c, tpl) {
 
 // ---------- template: コート / ホワイト ----------
 function drawBoard(c, dark) {
-  const acc = state.color;
+  const our = dark ? OUR.dark : OUR.light;
+  const gold = dark ? GOLD.dark : GOLD.light;
   const ink = dark ? "#ffffff" : "#14202b";
+  const opp = oppColor(ink);
   const muted = dark ? "rgba(255,255,255,.62)" : "rgba(20,32,43,.55)";
-  const dim = dark ? "rgba(255,255,255,.38)" : "rgba(20,32,43,.35)";
-  const loseCol = dark ? "#9fc3ff" : "#1e5ae6";
+  const dim = dark ? "rgba(255,255,255,.35)" : "rgba(20,32,43,.32)";
   // 背景
   if (dark) {
-    const g = c.createLinearGradient(0, 0, W, H); g.addColorStop(0, "#175487"); g.addColorStop(1, "#0b2d4b");
+    const g = c.createLinearGradient(0, 0, W, H); g.addColorStop(0, "#123522"); g.addColorStop(1, "#06140c");
     c.fillStyle = g; c.fillRect(0, 0, W, H);
   } else {
-    c.fillStyle = "#f4f5f7"; c.fillRect(0, 0, W, H);
-    c.fillStyle = acc; c.fillRect(0, 0, W, 18); c.fillRect(0, H - 18, W, 18);
+    c.fillStyle = "#f5f6f2"; c.fillRect(0, 0, W, H);
+    c.fillStyle = OUR.light; c.fillRect(0, 0, W, 22); c.fillRect(0, H - 22, W, 22);
+    c.fillStyle = gold; c.fillRect(0, 22, W, 6); c.fillRect(0, H - 28, W, 6);
   }
   drawLogo(c, dark ? 0.12 : 0.1);
-  // 卓球台のライン
+  // 卓球台のライン（緑）とセンターライン
   if (dark) {
-    c.strokeStyle = "rgba(255,255,255,.92)"; c.lineWidth = 12; c.strokeRect(42, 42, W - 84, H - 84);
-    c.fillStyle = "rgba(255,255,255,.10)"; c.fillRect(W / 2 - 4, 48, 8, H - 96);
+    c.strokeStyle = "#2f9e5f"; c.lineWidth = 12; c.strokeRect(42, 42, W - 84, H - 84);
+    c.strokeStyle = gold; c.lineWidth = 3; c.strokeRect(62, 62, W - 124, H - 124);
+    c.fillStyle = "rgba(255,255,255,.07)"; c.fillRect(W / 2 - 4, 66, 8, H - 132);
   }
   const o = outcome();
   let y = 170;
@@ -361,25 +368,26 @@ function drawBoard(c, dark) {
     fitFont(c, state.event.trim(), 700, JP, 42, 860);
     c.fillText(state.event.trim(), W / 2, y); y += 80;
   } else y += 30;
-  // 見出しピル
+  // 見出しピル（緑に金のふち）
   if (state.round?.trim()) {
     const t = state.round.trim();
     fitFont(c, t, 900, JP, 54, 820);
     const tw = c.measureText(t).width;
-    c.fillStyle = acc; rr(c, W / 2 - tw / 2 - 40, y - 46, W / 2 + tw / 2 + 40, y + 46, 46); c.fill();
+    rr(c, W / 2 - tw / 2 - 40, y - 46, W / 2 + tw / 2 + 40, y + 46, 46);
+    c.fillStyle = OUR.light; c.fill(); c.strokeStyle = gold; c.lineWidth = 4; c.stroke();
     c.fillStyle = "#fff"; c.fillText(t, W / 2, y + 2);
   }
   y += 150;
-  // チーム名
-  c.fillStyle = ink; fitFont(c, state.teamA || "", 900, JP, 104, 900); c.fillText(state.teamA || "", W / 2, y);
+  // チーム名：自チームは緑、相手は選んだ色
+  c.fillStyle = our; fitFont(c, state.teamA || "", 900, JP, 104, 900); c.fillText(state.teamA || "", W / 2, y);
   y += 96; c.fillStyle = muted; c.font = `700 52px ${NUM}`; c.fillText("VS", W / 2, y);
-  y += 96; c.fillStyle = ink; fitFont(c, state.teamB || "", 900, JP, 104, 900); c.fillText(state.teamB || "", W / 2, y);
+  y += 96; c.fillStyle = opp; fitFont(c, state.teamB || "", 900, JP, 104, 900); c.fillText(state.teamB || "", W / 2, y);
   // スコア
   y += 225;
   if (state.showResult) {
     c.font = `700 230px ${NUM}`;
-    c.fillStyle = o.w > o.l ? acc : ink; c.textAlign = "right"; c.fillText(String(o.w), W / 2 - 70, y);
-    c.fillStyle = o.l > o.w ? loseCol : ink; c.textAlign = "left"; c.fillText(String(o.l), W / 2 + 70, y);
+    c.fillStyle = o.w > o.l ? our : ink; c.textAlign = "right"; c.fillText(String(o.w), W / 2 - 70, y);
+    c.fillStyle = o.l > o.w ? opp : ink; c.textAlign = "left"; c.fillText(String(o.l), W / 2 + 70, y);
     c.fillStyle = muted; c.textAlign = "center"; c.fillText("-", W / 2, y - 6);
     y += 140;
     const label = o.won ? "WIN" : o.lost ? "LOSE" : o.started ? "試合中" : "試合前";
@@ -387,9 +395,9 @@ function drawBoard(c, dark) {
     c.font = /[A-Z]/.test(label) ? `700 46px ${NUM}` : `900 40px ${JP}`;
     const lw = c.measureText(label).width + 70;
     rr(c, W / 2 - lw / 2, y - 34, W / 2 + lw / 2, y + 34, 34);
-    if (filled) { c.fillStyle = o.won ? acc : (dark ? "rgba(255,255,255,.2)" : "#55606b"); c.fill(); }
+    if (filled) { c.fillStyle = o.won ? gold : (dark ? "rgba(255,255,255,.2)" : "#55606b"); c.fill(); }
     else { c.strokeStyle = muted; c.lineWidth = 3; c.stroke(); }
-    c.fillStyle = filled ? "#fff" : muted; c.fillText(label, W / 2, y + 2);
+    c.fillStyle = o.won ? "#10331f" : filled ? "#fff" : muted; c.fillText(label, W / 2, y + 2);
     y += 90;
   } else y -= 40;
   // 試合一覧
@@ -400,51 +408,54 @@ function drawBoard(c, dark) {
   const center = 608;
   state.matches.forEach((m, i) => {
     const top = y + i * rowH, cy = top + (rowH - 14) / 2;
-    if (dark) { c.fillStyle = "rgba(255,255,255,.09)"; rr(c, 76, top, W - 76, top + rowH - 14, 26); c.fill(); }
+    if (dark) { c.fillStyle = "rgba(255,255,255,.07)"; rr(c, 82, top, W - 82, top + rowH - 14, 26); c.fill(); }
     else {
-      c.save(); c.shadowColor = "rgba(20,32,43,.10)"; c.shadowBlur = 18; c.shadowOffsetY = 4;
-      c.fillStyle = "#ffffff"; rr(c, 76, top, W - 76, top + rowH - 14, 26); c.fill(); c.restore();
+      c.save(); c.shadowColor = "rgba(20,40,28,.10)"; c.shadowBlur = 18; c.shadowOffsetY = 4;
+      c.fillStyle = "#ffffff"; rr(c, 82, top, W - 82, top + rowH - 14, 26); c.fill(); c.restore();
     }
     const played = !!m.s, aWin = played && m.s[0] === "3";
-    // 番号
-    c.fillStyle = played ? (aWin ? acc : (dark ? "rgba(255,255,255,.25)" : "#9aa4ad")) : (dark ? "rgba(255,255,255,.18)" : "#e3e7eb");
-    c.beginPath(); c.arc(136, cy, Math.min(34, rowH * 0.26), 0, Math.PI * 2); c.fill();
+    // 番号（自チームが勝った試合は緑）
+    c.fillStyle = played ? (aWin ? OUR.light : (dark ? "rgba(255,255,255,.25)" : "#9aa4ad")) : (dark ? "rgba(255,255,255,.16)" : "#e3e7e3");
+    c.beginPath(); c.arc(140, cy, Math.min(34, rowH * 0.26), 0, Math.PI * 2); c.fill();
+    if (played && aWin) { c.strokeStyle = gold; c.lineWidth = 3; c.stroke(); }
     c.fillStyle = played || dark ? "#fff" : "#55606b"; c.textAlign = "center";
-    c.font = `700 ${Math.min(40, rowH * 0.3)}px ${NUM}`; c.fillText(String(i + 1), 136, cy + 1);
-    // 名前とスコア
-    c.textAlign = "right"; c.fillStyle = played && !aWin ? dim : ink;
-    fitFont(c, m.a, 900, JP, fs, center - 90 - 186); c.fillText(m.a, center - 90, cy);
-    c.textAlign = "left"; c.fillStyle = played && aWin ? dim : ink;
-    fitFont(c, m.b, 900, JP, fs, W - 100 - (center + 90)); c.fillText(m.b, center + 90, cy);
+    c.font = `700 ${Math.min(40, rowH * 0.3)}px ${NUM}`; c.fillText(String(i + 1), 140, cy + 1);
+    // 名前：自チームは緑、相手は選んだ色。負けた側は薄く
+    c.save(); c.textAlign = "right"; c.fillStyle = our; if (played && !aWin) c.globalAlpha = 0.4;
+    fitFont(c, m.a, 900, JP, fs, center - 90 - 190); c.fillText(m.a, center - 90, cy); c.restore();
+    c.save(); c.textAlign = "left"; c.fillStyle = opp; if (played && aWin) c.globalAlpha = 0.4;
+    fitFont(c, m.b, 900, JP, fs, W - 104 - (center + 90)); c.fillText(m.b, center + 90, cy); c.restore();
     c.textAlign = "center"; c.font = `700 ${fs * 1.05}px ${NUM}`;
-    c.fillStyle = played ? (aWin ? acc : loseCol) : dim;
+    c.fillStyle = played ? (aWin ? our : opp) : dim;
     c.fillText(played ? m.s : "–", center, cy);
   });
 }
 
 // ---------- template: クラシック（黒い枠） ----------
 const isWin = ch => "○〇●".includes(ch), isLose = ch => "×✕".includes(ch);
+// 1 行 = [文字, 色] の並び。自チームは緑、相手は選んだ色
 function classicBlocks() {
+  const W_ = "#ffffff", our = OUR.box, opp = oppColor(W_);
   const out = [];
-  if (state.event?.trim()) out.push([state.event.trim()]);
-  if (state.round?.trim()) out.push([state.round.trim()]);
-  const head = [`${state.teamA}vs${state.teamB}`];
+  if (state.event?.trim()) out.push([[[state.event.trim(), W_]]]);
+  if (state.round?.trim()) out.push([[[state.round.trim(), W_]]]);
+  const head = [[[state.teamA, our], ["vs", W_], [state.teamB, opp]]];
   const o = outcome();
-  if (state.showResult && o.started) head.push(`${o.won ? "○" : o.lost ? "×" : ""}${o.w}-${o.l}`);
+  if (state.showResult && o.started) head.push([[`${o.won ? "○" : o.lost ? "×" : ""}${o.w}-${o.l}`, W_]]);
   out.push(head);
-  const ms = state.matches.map((m, i) => `${i + 1}.${m.a}${m.s || " - "}${m.b}`);
+  const ms = state.matches.map((m, i) => [[`${i + 1}.`, W_], [m.a, our], [m.s || " - ", W_], [m.b, opp]]);
   if (ms.length) out.push(ms);
   return out;
 }
 function drawClassic(c) {
   const g = c.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, "#f4f4f4"); g.addColorStop(1, "#dedede");
+  g.addColorStop(0, "#f4f4f2"); g.addColorStop(1, "#dcdfd9");
   c.fillStyle = g; c.fillRect(0, 0, W, H);
   drawLogo(c, 0.35);
   const bl = classicBlocks(), lines = bl.flat();
   let size = 96;
   const cw = ch => (isWin(ch) || isLose(ch)) ? size : c.measureText(ch).width;
-  const lw = line => { let w = 0; for (const ch of line) w += cw(ch); return w; };
+  const lw = line => { let w = 0; for (const [t] of line) for (const ch of t) w += cw(ch); return w; };
   for (; size > 30; size -= 2) {
     c.font = `900 ${size}px ${JP}`;
     const widest = Math.max(...lines.map(lw));
@@ -463,7 +474,7 @@ function drawClassic(c) {
     for (const line of block) {
       let x = (W - lw(line)) / 2;
       const cy = y + lineH / 2;
-      for (const ch of line) {
+      for (const [text, color] of line) for (const ch of text) {
         const w = cw(ch);
         if (isWin(ch)) {
           c.strokeStyle = "#e60012"; c.lineWidth = Math.max(4, size / 9);
@@ -472,7 +483,7 @@ function drawClassic(c) {
           const r = size * 0.32; c.strokeStyle = "#1e5ae6"; c.lineWidth = Math.max(4, size / 9); c.lineCap = "round";
           c.beginPath(); c.moveTo(x + w / 2 - r, cy - r); c.lineTo(x + w / 2 + r, cy + r);
           c.moveTo(x + w / 2 - r, cy + r); c.lineTo(x + w / 2 + r, cy - r); c.stroke();
-        } else { c.fillStyle = "#fff"; c.fillText(ch, x, cy); }
+        } else { c.fillStyle = color; c.fillText(ch, x, cy); }
         x += w;
       }
       y += lineH;
@@ -492,10 +503,11 @@ TEMPLATES.forEach(t => {
   b.onclick = () => { state.template = t.id; changed(); };
   $("tpls").append(b);
 });
-COLORS.forEach(col => {
-  const b = document.createElement("button"); b.className = "sw"; b.dataset.c = col; b.style.background = col;
-  b.setAttribute("aria-label", "チームカラー " + col);
-  b.onclick = () => { state.color = col; changed(); };
+OPP_COLORS.forEach(col => {
+  const b = document.createElement("button"); b.className = "sw"; b.dataset.c = col;
+  b.style.background = col === "ink" ? "linear-gradient(135deg, #ffffff 50%, #14202b 50%)" : col;
+  b.setAttribute("aria-label", col === "ink" ? "相手チームの色 白・黒" : "相手チームの色 " + col);
+  b.onclick = () => { state.opp = col; changed(); };
   $("swatches").append(b);
 });
 function drawThumbs() {
