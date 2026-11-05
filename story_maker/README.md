@@ -51,3 +51,10 @@ python publish_story.py https://example.com/story.png
 
 `web/index.html` は claude.ai のアーティファクトとして公開しているページです。
 オーダー用紙の写真を選ぶと Claude が名前を読み取り、スコアを選ぶだけでストーリー画像を作って保存できます。
+
+### 誰でも使えるようにする
+
+- **claude.ai 版**（写真の読み取りあり）: アーティファクトの「Share」から公開リンクを作る。読み取りは開いた人の Claude アカウントで行われる。
+- **GitHub Pages 版**（ログイン不要・名前は手入力）: Settings → Pages → Source を「GitHub Actions」にすると、
+  `.github/workflows/story-maker-pages.yml` が `https://0313akira.github.io/Python-game-/` に公開する。
+  iPhone では「画像を保存」から共有メニューを開き、そのままインスタに送れる。

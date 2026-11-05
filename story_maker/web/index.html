@@ -1,122 +1,178 @@
 <title>卓球ストーリーメーカー</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Oswald:wght@500;700&display=swap">
 <style>
-/* Layout: phone-first single column (写真 → 内容 → 完成画像). Wide screens: form left, sticky preview right. */
+/* Layout: 卓球台をモチーフにした青い見出し → 手順カード（写真・内容・デザイン）→ 完成画像。
+   スマホは1列＋下に固定の保存バー、広い画面は右に完成画像を固定。 */
 :root {
-  --bg: #eef2f4;
+  --bg: #e9eef2;
   --surface: #ffffff;
-  --ink: #15212b;
-  --muted: #5b6b78;
-  --line: #d5dde3;
-  --table: #17507a;      /* 卓球台の青 */
-  --table-ink: #ffffff;
+  --ink: #122330;
+  --muted: #5d6e7b;
+  --line: #d3dce3;
+  --table: #134a77;        /* 卓球台の青 */
+  --table-deep: #0c3354;
+  --on-table: #ffffff;
+  --ball: #f28a1e;         /* オレンジのボール */
   --win: #d7262e;
-  --lose: #2c5fd6;
   --font: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --num: "Oswald", "Noto Sans JP", sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0f171d; --surface: #18232c; --ink: #e7eef3; --muted: #93a4b1; --line: #2b3a45;
-    --table: #3d8ac4; --table-ink: #08131b; --win: #ff5a5f; --lose: #6f95ff; color-scheme: dark;
+    --bg: #0d151b; --surface: #16212a; --ink: #e6edf2; --muted: #91a2af;
+    --line: #283843; --table: #1d5d93; --table-deep: #12405f; --on-table: #ffffff; --ball: #ff9d3d; --win: #ff5a5f;
+    color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0f171d; --surface: #18232c; --ink: #e7eef3; --muted: #93a4b1; --line: #2b3a45;
-  --table: #3d8ac4; --table-ink: #08131b; --win: #ff5a5f; --lose: #6f95ff; color-scheme: dark;
+  --bg: #0d151b; --surface: #16212a; --ink: #e6edf2; --muted: #91a2af;
+  --line: #283843; --table: #1d5d93; --table-deep: #12405f; --on-table: #ffffff; --ball: #ff9d3d; --win: #ff5a5f;
+  color-scheme: dark;
 }
 * { box-sizing: border-box; }
 body {
   background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.6;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 20px 40px;
+  padding-block: 16px 110px;
 }
-.wrap { max-width: 1060px; margin: 0 auto; display: grid; gap: 20px; }
-header h1 { margin: 0; font-size: 1.5rem; font-weight: 900; letter-spacing: .02em; text-wrap: balance; }
-header p { margin: 4px 0 0; color: var(--muted); }
-.cols { display: grid; gap: 20px; }
-@media (min-width: 860px) {
-  .cols { grid-template-columns: minmax(0, 1fr) 360px; align-items: start; }
+.wrap { max-width: 1080px; margin: 0 auto; display: grid; gap: 18px; }
+
+/* 見出し：卓球台 */
+.hero {
+  position: relative; overflow: hidden; border-radius: 16px; color: var(--on-table);
+  background: linear-gradient(160deg, var(--table), var(--table-deep));
+  padding: 26px 22px 24px; box-shadow: inset 0 0 0 5px rgba(255,255,255,.9);
+}
+.hero::before { /* センターライン */
+  content: ""; position: absolute; left: 50%; top: 5px; bottom: 5px; width: 3px; background: rgba(255,255,255,.35); transform: translateX(-50%);
+}
+.hero::after { /* ボール */
+  content: ""; position: absolute; width: 34px; height: 34px; border-radius: 50%; right: 26px; top: 22px;
+  background: radial-gradient(circle at 35% 30%, #ffd3a1, var(--ball) 55%, #c8650a);
+  box-shadow: 0 6px 14px rgba(0,0,0,.25);
+}
+.hero > * { position: relative; }
+.hero .eyebrow { font-family: var(--num); letter-spacing: .18em; font-size: .78rem; opacity: .8; text-transform: uppercase; }
+.hero h1 { margin: 2px 0 6px; font-size: clamp(1.6rem, 6vw, 2.3rem); font-weight: 900; line-height: 1.2; text-wrap: balance; }
+.hero p { margin: 0; max-width: 34em; opacity: .9; font-size: .92rem; }
+
+.cols { display: grid; gap: 18px; }
+@media (min-width: 880px) {
+  .cols { grid-template-columns: minmax(0, 1fr) 380px; align-items: start; }
   .preview { position: sticky; top: calc(16px + env(safe-area-inset-top, 0px)); }
+  .savebar { display: none !important; }
+  body { padding-bottom: 40px; }
 }
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
-.panel h2 { margin: 0; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
-.step { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--table); color: var(--table-ink); font-size: .8rem; font-weight: 900; }
-.form { display: grid; gap: 20px; min-width: 0; }
-label { font-size: .8rem; color: var(--muted); font-weight: 700; display: grid; gap: 4px; }
+.form { display: grid; gap: 18px; min-width: 0; }
+.panel { background: var(--surface); border-radius: 14px; padding: 18px; display: grid; gap: 14px; min-width: 0; border: 1px solid var(--line); }
+.panel h2 { margin: 0; font-size: 1.02rem; font-weight: 900; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.step {
+  font-family: var(--num); font-weight: 700; font-size: .85rem; display: inline-grid; place-items: center;
+  width: 28px; height: 28px; border-radius: 50%; color: #fff;
+  background: radial-gradient(circle at 35% 30%, #ffc98f, var(--ball) 60%);
+}
+label { font-size: .78rem; color: var(--muted); font-weight: 700; display: grid; gap: 4px; }
 input[type=text], select {
-  font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
-  padding: 8px 10px; width: 100%; min-width: 0;
+  font: inherit; font-size: 16px; color: var(--ink); background: var(--bg); border: 1px solid transparent; border-radius: 10px;
+  padding: 9px 11px; width: 100%; min-width: 0;
 }
-input[type=text]:focus-visible, select:focus-visible, button:focus-visible, .drop:focus-within { outline: 2px solid var(--table); outline-offset: 2px; }
+input[type=text]:focus, select:focus { border-color: var(--table); outline: none; background: var(--surface); }
+button:focus-visible, .drop:focus-within, .tpl:focus-visible, .sw:focus-visible { outline: 3px solid var(--ball); outline-offset: 2px; }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 button {
-  font: inherit; font-weight: 700; border-radius: 8px; padding: 10px 14px; cursor: pointer;
+  font: inherit; font-weight: 700; border-radius: 10px; padding: 11px 14px; cursor: pointer;
   border: 1px solid var(--line); background: var(--surface); color: var(--ink);
 }
-button.primary { background: var(--table); color: var(--table-ink); border-color: var(--table); }
-button:disabled { opacity: .55; cursor: default; }
+button.primary { background: var(--table); color: var(--on-table); border-color: var(--table); }
+button.big { padding: 14px; font-size: 1rem; }
+button:disabled { opacity: .5; cursor: default; }
 .drop {
-  border: 2px dashed var(--line); border-radius: 10px; padding: 18px; text-align: center; cursor: pointer;
-  display: grid; gap: 6px; justify-items: center; color: var(--muted);
+  position: relative; border: 2px dashed var(--line); border-radius: 12px; padding: 20px 14px; text-align: center; cursor: pointer;
+  display: grid; gap: 4px; justify-items: center; color: var(--muted); background: var(--bg);
 }
-.drop strong { color: var(--ink); }
-.drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.drop svg { width: 34px; height: 34px; color: var(--table); }
+.drop strong { color: var(--ink); font-size: 1rem; }
+.drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .thumbs { display: flex; gap: 8px; flex-wrap: wrap; }
-.thumbs img { height: 72px; border-radius: 6px; border: 1px solid var(--line); }
-.status { font-size: .9rem; margin: 0; min-height: 1.4em; }
+.thumbs:empty { display: none; }
+.thumbs img { height: 76px; border-radius: 8px; border: 1px solid var(--line); }
+.status { font-size: .88rem; margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--bg); }
+.status:empty { display: none; }
 .status.err { color: var(--win); }
-.matches { display: grid; gap: 8px; }
-.match { display: grid; grid-template-columns: 22px minmax(0,1fr) 84px minmax(0,1fr) 28px; gap: 6px; align-items: center; }
-.match .no { font-weight: 900; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
-.match select { padding: 8px 4px; text-align: center; font-variant-numeric: tabular-nums; }
-.match .del { padding: 4px; border: none; background: none; color: var(--muted); font-size: 1.1rem; }
-.colhead { display: grid; grid-template-columns: 22px minmax(0,1fr) 84px minmax(0,1fr) 28px; gap: 6px; font-size: .75rem; color: var(--muted); font-weight: 700; }
+
+.colhead, .match { display: grid; grid-template-columns: 22px minmax(0,1fr) 78px minmax(0,1fr) 26px; gap: 6px; align-items: center; }
+.colhead { font-size: .74rem; color: var(--muted); font-weight: 700; }
 .colhead span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tally { font-weight: 900; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
-.tally .w { color: var(--win); } .tally .l { color: var(--lose); }
+.matches { display: grid; gap: 8px; }
+.match .no { font-family: var(--num); font-weight: 700; color: var(--muted); text-align: right; }
+.match select { padding: 9px 2px; text-align: center; font-family: var(--num); }
+.match select.won { color: var(--win); font-weight: 700; }
+.match .del { padding: 4px; border: none; background: none; color: var(--muted); font-size: 1.1rem; }
+.tally { font-family: var(--num); font-weight: 700; font-size: 1.1rem; }
 .check { display: flex; gap: 8px; align-items: center; font-size: .9rem; color: var(--ink); font-weight: 400; }
-.preview canvas { width: 100%; height: auto; aspect-ratio: 9 / 16; border-radius: 12px; border: 1px solid var(--line); display: block; max-width: 100%; }
-.actions { display: grid; gap: 8px; }
+.example { font-size: .72rem; font-weight: 700; color: var(--ball); border: 1px solid currentColor; padding: 0 8px; border-radius: 99px; }
+
+.tpls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.tpl { padding: 6px; display: grid; gap: 6px; justify-items: center; font-size: .8rem; border-radius: 12px; }
+.tpl canvas { width: 100%; aspect-ratio: 9 / 16; height: auto; border-radius: 8px; display: block; }
+.tpl[aria-pressed="true"] { border-color: var(--table); box-shadow: 0 0 0 2px var(--table); }
+.swatches { display: flex; gap: 10px; flex-wrap: wrap; }
+.sw { width: 34px; height: 34px; border-radius: 50%; padding: 0; border: 3px solid var(--surface); box-shadow: 0 0 0 1px var(--line); }
+.sw[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--ink); }
+.logo-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: stretch; }
+
+.preview { display: grid; gap: 12px; }
+.preview canvas { width: 100%; height: auto; aspect-ratio: 9 / 16; border-radius: 14px; display: block; max-width: 100%; box-shadow: 0 10px 30px rgba(10, 30, 50, .18); }
 .hint { font-size: .8rem; color: var(--muted); margin: 0; }
-.example { font-size: .75rem; font-weight: 700; color: var(--table); background: color-mix(in srgb, var(--table) 12%, transparent); padding: 2px 8px; border-radius: 99px; }
-.saved-img { width: 100%; border-radius: 8px; }
-@media (max-width: 420px) {
-  .match, .colhead { grid-template-columns: 18px minmax(0,1fr) 70px minmax(0,1fr) 24px; gap: 4px; }
+.saved-img { width: 100%; border-radius: 10px; }
+.savebar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: flex; gap: 10px;
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(8px); border-top: 1px solid var(--line);
 }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.savebar a { flex: 0 0 auto; display: grid; place-items: center; padding: 0 14px; border-radius: 10px; border: 1px solid var(--line); color: var(--ink); text-decoration: none; font-weight: 700; }
+.savebar button { flex: 1; }
+@media (max-width: 420px) {
+  .colhead, .match { grid-template-columns: 16px minmax(0,1fr) 66px minmax(0,1fr) 22px; gap: 4px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
 </style>
 
 <div class="wrap">
-  <header>
+  <header class="hero">
+    <div class="eyebrow">Table Tennis · Story Maker</div>
     <h1>卓球ストーリーメーカー</h1>
-    <p>オーダー用紙の写真を入れると、Claude が名前を読み取ってストーリー用の画像を作ります。試合が進んだらスコアを選ぶだけで更新できます。</p>
+    <p>オーダー用紙を撮るだけで、インスタのストーリー画像ができあがり。試合が進んだらスコアを選んで保存し直すだけ。</p>
   </header>
 
   <div class="cols">
     <div class="form">
       <section class="panel">
-        <h2><span class="step">1</span>オーダー用紙の写真</h2>
+        <h2><span class="step">1</span>オーダー用紙を撮る</h2>
         <label for="ourTeam">自分のチーム名
-          <input type="text" id="ourTeam" value="北陸大学" autocomplete="off">
+          <input type="text" id="ourTeam" autocomplete="off">
         </label>
         <label class="drop" id="drop">
-          <strong>写真を選ぶ・撮る</strong>
-          <span>両チームの用紙があれば一緒に選べます</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+          <strong>写真を撮る・選ぶ</strong>
+          <span>両チームの用紙を一緒に選んでもOK</span>
           <input type="file" id="photo" accept="image/*" multiple>
         </label>
         <div class="thumbs" id="thumbs"></div>
-        <button class="primary" id="readBtn" disabled>写真からオーダーを読み取る</button>
+        <button class="primary big" id="readBtn" disabled>写真からオーダーを読み取る</button>
         <p class="status" id="readStatus" role="status"></p>
       </section>
 
       <section class="panel">
-        <h2><span class="step">2</span>内容の確認・スコア入力 <span class="example" id="exampleTag">例</span></h2>
-        <label for="round">見出し
-          <input type="text" id="round" autocomplete="off">
-        </label>
+        <h2><span class="step">2</span>内容とスコア <span class="example" id="exampleTag">入力例</span></h2>
+        <div class="row2">
+          <label for="round">見出し <input type="text" id="round" autocomplete="off" placeholder="団体:一回戦"></label>
+          <label for="event">大会名（任意） <input type="text" id="event" autocomplete="off" placeholder="夏季2026"></label>
+        </div>
         <div class="row2">
           <label for="teamA">自チーム <input type="text" id="teamA" autocomplete="off"></label>
           <label for="teamB">相手チーム <input type="text" id="teamB" autocomplete="off"></label>
@@ -127,15 +183,18 @@ button:disabled { opacity: .55; cursor: default; }
           <button id="addBtn">＋ 試合を追加</button>
           <span class="tally" id="tally"></span>
         </div>
-        <label class="check" for="showResult"><input type="checkbox" id="showResult" checked> チームの結果（○3-0 など）を表示</label>
+        <label class="check" for="showResult"><input type="checkbox" id="showResult" checked> チームの勝敗を画像に入れる</label>
       </section>
 
       <section class="panel">
-        <h2><span class="step">3</span>背景のロゴ（任意）</h2>
-        <div class="row2">
+        <h2><span class="step">3</span>デザインを選ぶ</h2>
+        <div class="tpls" id="tpls" role="group" aria-label="デザイン"></div>
+        <label>チームカラー</label>
+        <div class="swatches" id="swatches" role="group" aria-label="チームカラー"></div>
+        <div class="logo-row">
           <label class="drop" style="padding:12px">
-            <strong>ロゴ画像を選ぶ</strong>
-            <span>次回からも使われます</span>
+            <strong style="font-size:.9rem">部のロゴを入れる</strong>
+            <span>背景に薄く入ります</span>
             <input type="file" id="logo" accept="image/*">
           </label>
           <button id="logoClear">ロゴを外す</button>
@@ -143,74 +202,94 @@ button:disabled { opacity: .55; cursor: default; }
       </section>
     </div>
 
-    <aside class="panel preview">
+    <aside class="panel preview" id="preview">
       <h2>完成画像</h2>
       <canvas id="cv" width="1080" height="1920" aria-label="ストーリー画像のプレビュー"></canvas>
-      <div class="actions">
-        <button class="primary" id="saveBtn">画像を保存</button>
-        <p class="hint" id="saveHint">保存したらインスタのストーリーで画像を選ぶだけです。</p>
-        <img class="saved-img" id="fallbackImg" alt="完成したストーリー画像" hidden>
-      </div>
+      <button class="primary big" id="saveBtn">画像を保存</button>
+      <p class="hint" id="saveHint">保存したら、インスタのストーリーで画像を選ぶだけです。</p>
+      <img class="saved-img" id="fallbackImg" alt="完成したストーリー画像" hidden>
     </aside>
   </div>
 </div>
 
+<div class="savebar">
+  <a href="#preview">見る</a>
+  <button class="primary big" id="saveBtn2">画像を保存</button>
+</div>
+
 <script>
 const W = 1080, H = 1920;
-const FONT = '"Noto Sans JP", "Hiragino Sans", sans-serif';
+const JP = '"Noto Sans JP", "Hiragino Sans", sans-serif';
+const NUM = '"Oswald", "Noto Sans JP", sans-serif';
 const SCORES = ["", "3-0", "3-1", "3-2", "2-3", "1-3", "0-3"];
+const COLORS = ["#e60012", "#f08300", "#0f9d58", "#1e5ae6", "#7b3fe4", "#e4007f", "#222222"];
+const TEMPLATES = [
+  { id: "court", name: "コート" },
+  { id: "white", name: "ホワイト" },
+  { id: "classic", name: "クラシック" },
+];
 const $ = (id) => document.getElementById(id);
 
 // ---------- state ----------
 const EXAMPLE = {
-  round: "団体:一回戦", teamA: "北陸大学", teamB: "富山大学B", showResult: true,
+  round: "団体:一回戦", event: "夏季2026", teamA: "北陸大学", teamB: "富山大学B", showResult: true,
+  template: "court", color: "#e60012",
   matches: [
     { a: "金澤", b: "望月", s: "3-0" }, { a: "中西", b: "下清水", s: "3-0" },
     { a: "成川/守護", b: "大滝/佐藤", s: "3-0" }, { a: "田中", b: "芝田", s: "" }, { a: "成川", b: "佐藤", s: "" },
   ],
 };
-let state = load("story-state") || structuredClone(EXAMPLE);
-let isExample = !load("story-state");
-let logoImg = null;
-
 function load(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }
 function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+const saved = load("story-state");
+let isExample = !saved;
+let state = Object.assign(structuredClone(EXAMPLE), saved || {});
+let logoImg = null;
 
 // ---------- form ----------
 function fillForm() {
-  $("round").value = state.round; $("teamA").value = state.teamA; $("teamB").value = state.teamB;
+  for (const k of ["round", "event", "teamA", "teamB"]) $(k).value = state[k] || "";
   $("showResult").checked = state.showResult;
   const box = $("matches"); box.innerHTML = "";
   state.matches.forEach((m, i) => {
     const row = document.createElement("div"); row.className = "match";
     const no = document.createElement("span"); no.className = "no"; no.textContent = i + 1;
     const a = Object.assign(document.createElement("input"), { type: "text", value: m.a, id: "ma" + i, autocomplete: "off" });
-    a.setAttribute("aria-label", `${i + 1}番 自チーム`);
+    a.setAttribute("aria-label", `${i + 1}番 自チームの選手`);
     const s = document.createElement("select"); s.id = "ms" + i; s.setAttribute("aria-label", `${i + 1}番 スコア`);
     SCORES.forEach(v => s.append(new Option(v || "未", v, false, v === m.s)));
     const b = Object.assign(document.createElement("input"), { type: "text", value: m.b, id: "mb" + i, autocomplete: "off" });
-    b.setAttribute("aria-label", `${i + 1}番 相手`);
+    b.setAttribute("aria-label", `${i + 1}番 相手の選手`);
     const del = Object.assign(document.createElement("button"), { className: "del", textContent: "×", title: "この試合を消す" });
+    const mark = () => s.classList.toggle("won", !!m.s && m.s[0] === "3");
     a.oninput = () => { m.a = a.value; changed(); };
     b.oninput = () => { m.b = b.value; changed(); };
-    s.onchange = () => { m.s = s.value; changed(); };
+    s.onchange = () => { m.s = s.value; mark(); changed(); };
     del.onclick = () => { state.matches.splice(i, 1); fillForm(); changed(); };
-    row.append(no, a, s, b, del); box.append(row);
+    mark(); row.append(no, a, s, b, del); box.append(row);
   });
-  syncHeads();
+  syncUI();
 }
-function syncHeads() {
+function syncUI() {
   $("headA").textContent = state.teamA || "自チーム";
   $("headB").textContent = state.teamB || "相手";
   $("exampleTag").hidden = !isExample;
+  const { w, l } = tally();
+  $("tally").textContent = (w || l) ? `${w}勝 ${l}敗` : "";
+  document.querySelectorAll(".tpl").forEach(b => b.setAttribute("aria-pressed", b.dataset.id === state.template));
+  document.querySelectorAll(".sw").forEach(b => b.setAttribute("aria-pressed", b.dataset.c === state.color));
 }
-["round", "teamA", "teamB"].forEach(k => $(k).addEventListener("input", e => { state[k] = e.target.value; changed(); }));
+["round", "event", "teamA", "teamB"].forEach(k => $(k).addEventListener("input", e => { state[k] = e.target.value; changed(); }));
 $("showResult").onchange = e => { state.showResult = e.target.checked; changed(); };
 $("addBtn").onclick = () => { state.matches.push({ a: "", b: "", s: "" }); fillForm(); changed(); };
-$("ourTeam").value = load("story-team") || "北陸大学";
+$("ourTeam").value = load("story-team") ?? "北陸大学";
 $("ourTeam").oninput = e => store("story-team", e.target.value);
 
-function changed() { isExample = false; store("story-state", state); syncHeads(); draw(); }
+let thumbTimer = 0;
+function changed() {
+  isExample = false; store("story-state", state); syncUI(); draw(ctx, state.template);
+  clearTimeout(thumbTimer); thumbTimer = setTimeout(drawThumbs, 250);
+}
 
 function tally() {
   let w = 0, l = 0;
@@ -221,84 +300,179 @@ function tally() {
   }
   return { w, l };
 }
-
-// ---------- text blocks (same layout as the Python version) ----------
-function blocks() {
-  const out = [];
-  if (state.round.trim()) out.push([state.round.trim()]);
-  const head = [`${state.teamA}vs${state.teamB}`];
+function outcome() {
   const { w, l } = tally();
   const need = Math.floor(state.matches.length / 2) + 1;
-  if (state.showResult && (w || l)) {
-    const mark = w >= need ? "○" : l >= need ? "×" : "";
-    head.push(`${mark}${w}-${l}`);
+  return { w, l, won: w >= need, lost: l >= need, started: w + l > 0 };
+}
+
+// ---------- drawing helpers ----------
+function rr(c, x0, y0, x1, y1, r) {
+  c.beginPath();
+  c.moveTo(x0 + r, y0); c.arcTo(x1, y0, x1, y1, r); c.arcTo(x1, y1, x0, y1, r);
+  c.arcTo(x0, y1, x0, y0, r); c.arcTo(x0, y0, x1, y0, r); c.closePath();
+}
+function fitFont(c, text, weight, family, start, maxW, min = 24) {
+  let s = start;
+  for (; s > min; s -= 2) { c.font = `${weight} ${s}px ${family}`; if (c.measureText(text).width <= maxW) break; }
+  c.font = `${weight} ${s}px ${family}`;
+  return s;
+}
+function drawLogo(c, alpha) {
+  if (!logoImg) return;
+  const sc = Math.min(W * 0.85 / logoImg.width, H * 0.5 / logoImg.height);
+  const lw = logoImg.width * sc, lh = logoImg.height * sc;
+  c.save(); c.globalAlpha = alpha; c.drawImage(logoImg, (W - lw) / 2, (H - lh) / 2, lw, lh); c.restore();
+}
+function draw(c, tpl) {
+  c.save(); c.textBaseline = "middle"; c.textAlign = "left";
+  if (tpl === "classic") drawClassic(c); else drawBoard(c, tpl === "court");
+  c.restore();
+}
+
+// ---------- template: コート / ホワイト ----------
+function drawBoard(c, dark) {
+  const acc = state.color;
+  const ink = dark ? "#ffffff" : "#14202b";
+  const muted = dark ? "rgba(255,255,255,.62)" : "rgba(20,32,43,.55)";
+  const dim = dark ? "rgba(255,255,255,.38)" : "rgba(20,32,43,.35)";
+  const loseCol = dark ? "#9fc3ff" : "#1e5ae6";
+  // 背景
+  if (dark) {
+    const g = c.createLinearGradient(0, 0, W, H); g.addColorStop(0, "#175487"); g.addColorStop(1, "#0b2d4b");
+    c.fillStyle = g; c.fillRect(0, 0, W, H);
+  } else {
+    c.fillStyle = "#f4f5f7"; c.fillRect(0, 0, W, H);
+    c.fillStyle = acc; c.fillRect(0, 0, W, 18); c.fillRect(0, H - 18, W, 18);
   }
+  drawLogo(c, dark ? 0.12 : 0.1);
+  // 卓球台のライン
+  if (dark) {
+    c.strokeStyle = "rgba(255,255,255,.92)"; c.lineWidth = 12; c.strokeRect(42, 42, W - 84, H - 84);
+    c.fillStyle = "rgba(255,255,255,.10)"; c.fillRect(W / 2 - 4, 48, 8, H - 96);
+  }
+  const o = outcome();
+  let y = 170;
+  c.textAlign = "center";
+  // 大会名
+  if (state.event?.trim()) {
+    c.fillStyle = muted;
+    fitFont(c, state.event.trim(), 700, JP, 42, 860);
+    c.fillText(state.event.trim(), W / 2, y); y += 80;
+  } else y += 30;
+  // 見出しピル
+  if (state.round?.trim()) {
+    const t = state.round.trim();
+    fitFont(c, t, 900, JP, 54, 820);
+    const tw = c.measureText(t).width;
+    c.fillStyle = acc; rr(c, W / 2 - tw / 2 - 40, y - 46, W / 2 + tw / 2 + 40, y + 46, 46); c.fill();
+    c.fillStyle = "#fff"; c.fillText(t, W / 2, y + 2);
+  }
+  y += 150;
+  // チーム名
+  c.fillStyle = ink; fitFont(c, state.teamA || "", 900, JP, 104, 900); c.fillText(state.teamA || "", W / 2, y);
+  y += 96; c.fillStyle = muted; c.font = `700 52px ${NUM}`; c.fillText("VS", W / 2, y);
+  y += 96; c.fillStyle = ink; fitFont(c, state.teamB || "", 900, JP, 104, 900); c.fillText(state.teamB || "", W / 2, y);
+  // スコア
+  y += 225;
+  if (state.showResult) {
+    c.font = `700 230px ${NUM}`;
+    c.fillStyle = o.w > o.l ? acc : ink; c.textAlign = "right"; c.fillText(String(o.w), W / 2 - 70, y);
+    c.fillStyle = o.l > o.w ? loseCol : ink; c.textAlign = "left"; c.fillText(String(o.l), W / 2 + 70, y);
+    c.fillStyle = muted; c.textAlign = "center"; c.fillText("-", W / 2, y - 6);
+    y += 140;
+    const label = o.won ? "WIN" : o.lost ? "LOSE" : o.started ? "試合中" : "試合前";
+    const filled = o.won || o.lost;
+    c.font = /[A-Z]/.test(label) ? `700 46px ${NUM}` : `900 40px ${JP}`;
+    const lw = c.measureText(label).width + 70;
+    rr(c, W / 2 - lw / 2, y - 34, W / 2 + lw / 2, y + 34, 34);
+    if (filled) { c.fillStyle = o.won ? acc : (dark ? "rgba(255,255,255,.2)" : "#55606b"); c.fill(); }
+    else { c.strokeStyle = muted; c.lineWidth = 3; c.stroke(); }
+    c.fillStyle = filled ? "#fff" : muted; c.fillText(label, W / 2, y + 2);
+    y += 90;
+  } else y -= 40;
+  // 試合一覧
+  const n = state.matches.length;
+  if (!n) return;
+  const rowH = Math.min(150, (H - 120 - y) / n);
+  const fs = Math.min(58, rowH * 0.42);
+  const center = 608;
+  state.matches.forEach((m, i) => {
+    const top = y + i * rowH, cy = top + (rowH - 14) / 2;
+    if (dark) { c.fillStyle = "rgba(255,255,255,.09)"; rr(c, 76, top, W - 76, top + rowH - 14, 26); c.fill(); }
+    else {
+      c.save(); c.shadowColor = "rgba(20,32,43,.10)"; c.shadowBlur = 18; c.shadowOffsetY = 4;
+      c.fillStyle = "#ffffff"; rr(c, 76, top, W - 76, top + rowH - 14, 26); c.fill(); c.restore();
+    }
+    const played = !!m.s, aWin = played && m.s[0] === "3";
+    // 番号
+    c.fillStyle = played ? (aWin ? acc : (dark ? "rgba(255,255,255,.25)" : "#9aa4ad")) : (dark ? "rgba(255,255,255,.18)" : "#e3e7eb");
+    c.beginPath(); c.arc(136, cy, Math.min(34, rowH * 0.26), 0, Math.PI * 2); c.fill();
+    c.fillStyle = played || dark ? "#fff" : "#55606b"; c.textAlign = "center";
+    c.font = `700 ${Math.min(40, rowH * 0.3)}px ${NUM}`; c.fillText(String(i + 1), 136, cy + 1);
+    // 名前とスコア
+    c.textAlign = "right"; c.fillStyle = played && !aWin ? dim : ink;
+    fitFont(c, m.a, 900, JP, fs, center - 90 - 186); c.fillText(m.a, center - 90, cy);
+    c.textAlign = "left"; c.fillStyle = played && aWin ? dim : ink;
+    fitFont(c, m.b, 900, JP, fs, W - 100 - (center + 90)); c.fillText(m.b, center + 90, cy);
+    c.textAlign = "center"; c.font = `700 ${fs * 1.05}px ${NUM}`;
+    c.fillStyle = played ? (aWin ? acc : loseCol) : dim;
+    c.fillText(played ? m.s : "–", center, cy);
+  });
+}
+
+// ---------- template: クラシック（黒い枠） ----------
+const isWin = ch => "○〇●".includes(ch), isLose = ch => "×✕".includes(ch);
+function classicBlocks() {
+  const out = [];
+  if (state.event?.trim()) out.push([state.event.trim()]);
+  if (state.round?.trim()) out.push([state.round.trim()]);
+  const head = [`${state.teamA}vs${state.teamB}`];
+  const o = outcome();
+  if (state.showResult && o.started) head.push(`${o.won ? "○" : o.lost ? "×" : ""}${o.w}-${o.l}`);
   out.push(head);
   const ms = state.matches.map((m, i) => `${i + 1}.${m.a}${m.s || " - "}${m.b}`);
   if (ms.length) out.push(ms);
-  const t = $("tally");
-  t.innerHTML = (w || l) ? `<span class="${w >= l ? "w" : "l"}">${w}勝${l}敗</span>` : "";
   return out;
 }
-
-// ---------- drawing ----------
-const cv = $("cv"), ctx = cv.getContext("2d");
-function rr(x0, y0, x1, y1, r) {
-  ctx.beginPath();
-  ctx.moveTo(x0 + r, y0); ctx.arcTo(x1, y0, x1, y1, r); ctx.arcTo(x1, y1, x0, y1, r);
-  ctx.arcTo(x0, y1, x0, y0, r); ctx.arcTo(x0, y0, x1, y0, r); ctx.closePath(); ctx.fill();
-}
-const isWin = ch => "○〇●".includes(ch), isLose = ch => "×✕".includes(ch);
-function charWidth(ch) { return (isWin(ch) || isLose(ch)) ? parseFloat(ctx.font.split(" ")[1]) * 1.0 : ctx.measureText(ch).width; }
-function lineWidth(line) { let w = 0; for (const ch of line) w += charWidth(ch); return w; }
-
-function draw() {
-  const bl = blocks();
-  const g = ctx.createLinearGradient(0, 0, 0, H);
+function drawClassic(c) {
+  const g = c.createLinearGradient(0, 0, 0, H);
   g.addColorStop(0, "#f4f4f4"); g.addColorStop(1, "#dedede");
-  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  if (logoImg) {
-    const sc = Math.min(W * 0.9 / logoImg.width, H * 0.6 / logoImg.height);
-    const lw = logoImg.width * sc, lh = logoImg.height * sc;
-    ctx.save(); ctx.globalAlpha = 0.35; ctx.filter = "blur(2px)";
-    ctx.drawImage(logoImg, (W - lw) / 2, (H - lh) / 2, lw, lh); ctx.restore();
-  }
-  const lines = bl.flat();
-  if (!lines.length) return;
+  c.fillStyle = g; c.fillRect(0, 0, W, H);
+  drawLogo(c, 0.35);
+  const bl = classicBlocks(), lines = bl.flat();
   let size = 96;
+  const cw = ch => (isWin(ch) || isLose(ch)) ? size : c.measureText(ch).width;
+  const lw = line => { let w = 0; for (const ch of line) w += cw(ch); return w; };
   for (; size > 30; size -= 2) {
-    ctx.font = `900 ${size}px ${FONT}`;
-    const widest = Math.max(...lines.map(lineWidth));
-    const total = lines.length * size * 1.22 + (bl.length - 1) * size * 0.9;
-    if (widest <= W - 200 && total <= H * 0.72) break;
+    c.font = `900 ${size}px ${JP}`;
+    const widest = Math.max(...lines.map(lw));
+    if (widest <= W - 200 && lines.length * size * 1.22 + (bl.length - 1) * size * 0.9 <= H * 0.72) break;
   }
-  ctx.font = `900 ${size}px ${FONT}`;
+  c.font = `900 ${size}px ${JP}`;
   const lineH = Math.round(size * 1.22), gap = Math.round(size * 0.9);
   const padX = size * 0.35, padY = size * 0.18, rad = size * 0.28;
   let y = (H - (lines.length * lineH + (bl.length - 1) * gap)) / 2;
-  ctx.textBaseline = "middle";
   for (const block of bl) {
-    ctx.fillStyle = "#000";
+    c.fillStyle = "#000";
     block.forEach((line, i) => {
-      const tw = lineWidth(line), ly = y + i * lineH;
-      rr((W - tw) / 2 - padX, ly - (i === 0 ? padY : 0), (W + tw) / 2 + padX, ly + lineH + (i === block.length - 1 ? padY : 0), rad);
+      const tw = lw(line), ly = y + i * lineH;
+      rr(c, (W - tw) / 2 - padX, ly - (i === 0 ? padY : 0), (W + tw) / 2 + padX, ly + lineH + (i === block.length - 1 ? padY : 0), rad); c.fill();
     });
     for (const line of block) {
-      let x = (W - lineWidth(line)) / 2;
+      let x = (W - lw(line)) / 2;
       const cy = y + lineH / 2;
       for (const ch of line) {
-        const cw = charWidth(ch);
+        const w = cw(ch);
         if (isWin(ch)) {
-          ctx.strokeStyle = "#e60012"; ctx.lineWidth = Math.max(4, size / 9);
-          ctx.beginPath(); ctx.arc(x + cw / 2 - size * 0.04, cy, size * 0.38, 0, Math.PI * 2); ctx.stroke();
+          c.strokeStyle = "#e60012"; c.lineWidth = Math.max(4, size / 9);
+          c.beginPath(); c.arc(x + w / 2 - size * 0.04, cy, size * 0.38, 0, Math.PI * 2); c.stroke();
         } else if (isLose(ch)) {
-          const r = size * 0.34; ctx.strokeStyle = "#1e5ae6"; ctx.lineWidth = Math.max(4, size / 9); ctx.lineCap = "round";
-          ctx.beginPath(); ctx.moveTo(x + cw / 2 - r, cy - r); ctx.lineTo(x + cw / 2 + r, cy + r);
-          ctx.moveTo(x + cw / 2 - r, cy + r); ctx.lineTo(x + cw / 2 + r, cy - r); ctx.stroke();
-        } else {
-          ctx.fillStyle = "#fff"; ctx.fillText(ch, x, cy);
-        }
-        x += cw;
+          const r = size * 0.32; c.strokeStyle = "#1e5ae6"; c.lineWidth = Math.max(4, size / 9); c.lineCap = "round";
+          c.beginPath(); c.moveTo(x + w / 2 - r, cy - r); c.lineTo(x + w / 2 + r, cy + r);
+          c.moveTo(x + w / 2 - r, cy + r); c.lineTo(x + w / 2 + r, cy - r); c.stroke();
+        } else { c.fillStyle = "#fff"; c.fillText(ch, x, cy); }
+        x += w;
       }
       y += lineH;
     }
@@ -306,10 +480,35 @@ function draw() {
   }
 }
 
+// ---------- design pickers ----------
+const cv = $("cv"), ctx = cv.getContext("2d");
+const big = document.createElement("canvas"); big.width = W; big.height = H;
+const bctx = big.getContext("2d");
+TEMPLATES.forEach(t => {
+  const b = document.createElement("button"); b.className = "tpl"; b.dataset.id = t.id;
+  const tc = document.createElement("canvas"); tc.width = 216; tc.height = 384;
+  b.append(tc, document.createTextNode(t.name));
+  b.onclick = () => { state.template = t.id; changed(); };
+  $("tpls").append(b);
+});
+COLORS.forEach(col => {
+  const b = document.createElement("button"); b.className = "sw"; b.dataset.c = col; b.style.background = col;
+  b.setAttribute("aria-label", "チームカラー " + col);
+  b.onclick = () => { state.color = col; changed(); };
+  $("swatches").append(b);
+});
+function drawThumbs() {
+  document.querySelectorAll(".tpl canvas").forEach(tc => {
+    draw(bctx, tc.parentElement.dataset.id);
+    tc.getContext("2d").drawImage(big, 0, 0, tc.width, tc.height);
+  });
+}
+function drawAll() { draw(ctx, state.template); drawThumbs(); }
+
 // ---------- logo ----------
 function setLogo(url) {
-  if (!url) { logoImg = null; draw(); return; }
-  const img = new Image(); img.onload = () => { logoImg = img; draw(); }; img.src = url;
+  if (!url) { logoImg = null; drawAll(); return; }
+  const img = new Image(); img.onload = () => { logoImg = img; drawAll(); }; img.src = url;
 }
 $("logo").onchange = e => {
   const f = e.target.files[0]; if (!f) return;
@@ -327,57 +526,55 @@ $("logo").onchange = e => {
 $("logoClear").onclick = () => { try { localStorage.removeItem("story-logo"); } catch {} setLogo(null); };
 
 // ---------- reading the order sheet with Claude ----------
-let files = [], sample = null, ctl = null;
+let files = [], sample = null;
+function status(msg, kind) { const s = $("readStatus"); s.textContent = msg; s.className = "status " + (kind || ""); }
 $("photo").onchange = e => {
   files = [...e.target.files];
   const t = $("thumbs"); t.innerHTML = "";
   files.forEach(f => { const im = new Image(); im.src = URL.createObjectURL(f); im.alt = f.name; t.append(im); });
   $("readBtn").disabled = !files.length || !sample;
-  status(files.length ? `${files.length}枚選びました。` : "");
+  if (sample) status(files.length ? `${files.length}枚選びました。「読み取る」を押してください。` : "");
 };
-function status(msg, err) { const s = $("readStatus"); s.textContent = msg; s.className = "status" + (err ? " err" : ""); }
-
 const ERR = {
-  not_granted: "Claude の利用が許可されていないため読み取れません。名前は手で入力してください。",
+  not_granted: "Claude の利用が許可されなかったため読み取れません。名前は手で入力してください。",
   sampling_disabled: "このアカウントでは Claude を使えません。名前は手で入力してください。",
   images_unavailable: "この画面では写真を送れません。名前は手で入力してください。",
   image_rejected: "この写真は読み込めませんでした。別の写真で試してください。",
-  rate_limited: "少し時間をおいてからもう一度押してください。",
-  invalid_json: "うまく読み取れませんでした。もう一度押すか、明るい写真で試してください。",
+  rate_limited: "少し時間をおいてから、もう一度押してください。",
+  session_expired: "claude.ai にもう一度ログインしてください。",
+  invalid_json: "うまく読み取れませんでした。明るく、用紙全体が入った写真で試してください。",
   refused: "この写真は読み取れませんでした。",
 };
-
 $("readBtn").onclick = async () => {
   if (!files.length || !sample) return;
   const our = $("ourTeam").value.trim();
   $("readBtn").disabled = true; status("読み取り中…（数十秒かかることがあります）");
-  ctl = new AbortController();
   const prompt = `添付は卓球の団体戦のオーダー用紙の写真です（1〜2枚）。書かれている内容を読み取り、次の形の JSON だけを返してください。
-{"round": string, "teamA": string, "teamB": string, "matches": [{"a": string, "b": string}], "notes": string}
+{"round": string, "event": string, "teamA": string, "teamB": string, "matches": [{"a": string, "b": string}], "notes": string}
 ルール:
 - 自分のチームは「${our || "（不明）"}」です。自分のチームを teamA、相手を teamB にし、各試合の a に自分のチームの選手、b に相手の選手を入れる。
 - 用紙が片方のチームの分しかなければ、もう片方のチーム名と選手名は空文字 "" にする。
 - matches は試合の順番どおり（1番から）。ダブルスは「成川/守護」のように / でつなぐ。
 - 選手名は用紙の表記どおり（ふつうは名字だけ）。空白は入れない。
 - round は「一回戦」「準決勝」などが読み取れれば「団体:一回戦」の形、わからなければ ""。
+- event は大会名が書いてあれば短く、なければ ""。
 - チーム名は用紙の表記どおり（「北陸大学B」など）。
 - 読みに自信がない文字があれば notes に日本語で短く書く。なければ ""。`;
   try {
-    const r = await sample.json(prompt, { images: files, signal: ctl.signal });
+    const r = await sample.json(prompt, { images: files });
     const ms = Array.isArray(r?.matches) ? r.matches : [];
     if (!ms.length) throw { code: "invalid_json" };
-    const old = state;
-    state = {
-      round: String(r.round || "") || old.round,
-      teamA: String(r.teamA || "") || our || old.teamA,
+    Object.assign(state, {
+      round: String(r.round || "") || state.round,
+      event: String(r.event || "") || state.event,
+      teamA: String(r.teamA || "") || our || state.teamA,
       teamB: String(r.teamB || ""),
-      showResult: old.showResult,
       matches: ms.map(m => ({ a: String(m.a || ""), b: String(m.b || ""), s: "" })),
-    };
-    isExample = false; store("story-state", state); fillForm(); draw();
-    status(r.notes ? `読み取りました。確認してください：${r.notes}` : "読み取りました。名前を確認してください。");
+    });
+    isExample = false; fillForm(); changed();
+    status(r.notes ? `読み取りました。確認してください：${r.notes}` : "読み取りました。名前に間違いがないか確認してください。");
   } catch (e) {
-    if (e?.code !== "cancelled") status(ERR[e?.code] || "読み取りに失敗しました。もう一度押してください。", true);
+    if (e?.code !== "cancelled") status(ERR[e?.code] || "読み取りに失敗しました。もう一度押してください。", "err");
   } finally {
     $("readBtn").disabled = !files.length;
   }
@@ -385,30 +582,47 @@ $("readBtn").onclick = async () => {
 
 // ---------- saving ----------
 let downloads = null;
-$("saveBtn").onclick = () => {
-  cv.toBlob(async blob => {
-    const name = `${state.round || "story"}_${state.teamB || ""}.png`.replace(/[\\/:*?"<>|]/g, "_");
-    if (downloads) {
-      try { await downloads.save({ filename: name, data: blob }); $("saveHint").textContent = "保存しました。インスタのストーリーで画像を選んでください。"; return; }
-      catch (e) { if (e?.code === "declined") return; }
+async function save() {
+  draw(ctx, state.template);
+  const blob = await new Promise(r => cv.toBlob(r, "image/png"));
+  const name = `${state.round || "story"}_${state.teamB || ""}.png`.replace(/[\\/:*?"<>|\s]/g, "_");
+  const hint = $("saveHint");
+  if (downloads) {
+    try { await downloads.save({ filename: name, data: blob }); hint.textContent = "保存しました。インスタのストーリーで画像を選んでください。"; return; }
+    catch (e) { if (e?.code === "declined") return; }
+  } else if (!window.claude) {
+    // claude.ai の外（GitHub Pages など）で開いたとき：共有メニューからそのままインスタへ
+    const file = new File([blob], name, { type: "image/png" });
+    if (navigator.canShare?.({ files: [file] })) {
+      try { await navigator.share({ files: [file] }); hint.textContent = "共有メニューから「Instagram」や「画像を保存」を選べます。"; return; }
+      catch (e) { if (e?.name === "AbortError") return; }
     }
-    const img = $("fallbackImg"); img.src = URL.createObjectURL(blob); img.hidden = false;
-    $("saveHint").textContent = "下の画像を長押し（または右クリック）して保存してください。";
-  }, "image/png");
-};
+    const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: name });
+    document.body.append(a); a.click(); a.remove();
+  }
+  const img = $("fallbackImg"); img.src = URL.createObjectURL(blob); img.hidden = false;
+  hint.textContent = "保存されない場合は、下の画像を長押しして保存してください。";
+  if (matchMedia("(max-width: 879px)").matches) $("preview").scrollIntoView({ behavior: "smooth" });
+}
+$("saveBtn").onclick = save;
+$("saveBtn2").onclick = save;
 
 // ---------- boot ----------
 fillForm();
-draw();
-document.fonts.load(`900 80px "Noto Sans JP"`, "団体戦北陸大学").then(draw).catch(() => {});
+drawAll();
+Promise.all([
+  document.fonts.load(`900 80px "Noto Sans JP"`, "団体戦北陸大学"),
+  document.fonts.load(`700 80px "Oswald"`, "0123VS"),
+]).then(drawAll).catch(() => {});
 try { const l = localStorage.getItem("story-logo"); if (l) setLogo(l); } catch {}
 (async () => {
-  if (!window.claude) { status("写真の読み取りは claude.ai で開いたときに使えます。名前は手で入力できます。"); return; }
+  const noRead = "写真の読み取りは、Claude にログインして開いたときに使えます。名前は手で入力すれば同じ画像が作れます。";
+  if (!window.claude) { status(noRead); return; }
   const [s, d] = await Promise.all([claude.use("sample"), claude.use("downloads")]);
   downloads = d;
-  if (!s) { status("この画面では写真の読み取りが使えません。名前は手で入力できます。"); return; }
+  if (!s) { status(noRead); return; }
   const lim = await s.limits().catch(() => null);
-  if (!lim?.images) { status("この画面では写真を送れません。名前は手で入力できます。"); return; }
+  if (!lim?.images) { status(noRead); return; }
   sample = s;
   $("readBtn").disabled = !files.length;
 })();
