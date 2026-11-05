@@ -1,0 +1,493 @@
+<title>卓球リールメーカー</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Oswald:wght@500;700&family=Shippori+Mincho+B1:wght@800&family=Yuji+Syuku&display=swap">
+<style>
+/* Layout: ストーリーメーカーと同じ卓球台モチーフ。手順カード（動画・文字・色）→ 完成動画。
+   スマホは1列＋下に固定の書き出しバー、広い画面は右に完成動画を固定。 */
+:root {
+  --bg: #e9eef2;
+  --surface: #ffffff;
+  --ink: #122330;
+  --muted: #5d6e7b;
+  --line: #d3dce3;
+  --table: #134a77;
+  --table-deep: #0c3354;
+  --on-table: #ffffff;
+  --ball: #f28a1e;
+  --err: #d7262e;
+  --font: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --num: "Oswald", "Noto Sans JP", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d151b; --surface: #16212a; --ink: #e6edf2; --muted: #91a2af;
+    --line: #283843; --table: #1d5d93; --table-deep: #12405f; --on-table: #ffffff; --ball: #ff9d3d; --err: #ff5a5f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d151b; --surface: #16212a; --ink: #e6edf2; --muted: #91a2af;
+  --line: #283843; --table: #1d5d93; --table-deep: #12405f; --on-table: #ffffff; --ball: #ff9d3d; --err: #ff5a5f;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px 110px;
+}
+.wrap { max-width: 1080px; margin: 0 auto; display: grid; gap: 18px; }
+.hero {
+  position: relative; overflow: hidden; border-radius: 16px; color: var(--on-table);
+  background: linear-gradient(160deg, var(--table), var(--table-deep));
+  padding: 26px 22px 24px; box-shadow: inset 0 0 0 5px rgba(255,255,255,.9);
+}
+.hero::before { content: ""; position: absolute; left: 50%; top: 5px; bottom: 5px; width: 3px; background: rgba(255,255,255,.35); transform: translateX(-50%); }
+.hero::after {
+  content: ""; position: absolute; width: 34px; height: 34px; border-radius: 50%; right: 26px; top: 22px;
+  background: radial-gradient(circle at 35% 30%, #ffd3a1, var(--ball) 55%, #c8650a); box-shadow: 0 6px 14px rgba(0,0,0,.25);
+}
+.hero > * { position: relative; }
+.hero .eyebrow { font-family: var(--num); letter-spacing: .18em; font-size: .78rem; opacity: .8; text-transform: uppercase; }
+.hero h1 { margin: 2px 0 6px; font-size: clamp(1.6rem, 6vw, 2.3rem); font-weight: 900; line-height: 1.2; text-wrap: balance; }
+.hero p { margin: 0; max-width: 34em; opacity: .9; font-size: .92rem; }
+.cols { display: grid; gap: 18px; }
+@media (min-width: 880px) {
+  .cols { grid-template-columns: minmax(0, 1fr) 380px; align-items: start; }
+  .preview { position: sticky; top: calc(16px + env(safe-area-inset-top, 0px)); }
+  .savebar { display: none !important; }
+  body { padding-bottom: 40px; }
+}
+.form { display: grid; gap: 18px; min-width: 0; }
+.panel { background: var(--surface); border-radius: 14px; padding: 18px; display: grid; gap: 14px; min-width: 0; border: 1px solid var(--line); }
+.panel h2 { margin: 0; font-size: 1.02rem; font-weight: 900; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.step {
+  font-family: var(--num); font-weight: 700; font-size: .85rem; display: inline-grid; place-items: center;
+  width: 28px; height: 28px; border-radius: 50%; color: #fff; background: radial-gradient(circle at 35% 30%, #ffc98f, var(--ball) 60%);
+}
+label { font-size: .78rem; color: var(--muted); font-weight: 700; display: grid; gap: 4px; }
+input[type=text] {
+  font: inherit; font-size: 16px; color: var(--ink); background: var(--bg); border: 1px solid transparent; border-radius: 10px;
+  padding: 9px 11px; width: 100%; min-width: 0;
+}
+input[type=text]:focus { border-color: var(--table); outline: none; background: var(--surface); }
+input[type=range] { width: 100%; accent-color: var(--table); }
+button:focus-visible, .drop:focus-within, .sw:focus-visible, input[type=range]:focus-visible { outline: 3px solid var(--ball); outline-offset: 2px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+button {
+  font: inherit; font-weight: 700; border-radius: 10px; padding: 11px 14px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+}
+button.primary { background: var(--table); color: var(--on-table); border-color: var(--table); }
+button.big { padding: 14px; font-size: 1rem; }
+button:disabled { opacity: .5; cursor: default; }
+.drop {
+  position: relative; border: 2px dashed var(--line); border-radius: 12px; padding: 20px 14px; text-align: center; cursor: pointer;
+  display: grid; gap: 4px; justify-items: center; color: var(--muted); background: var(--bg);
+}
+.drop svg { width: 34px; height: 34px; color: var(--table); }
+.drop strong { color: var(--ink); font-size: 1rem; }
+.drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.trim { display: grid; gap: 10px; }
+.trim .vals { display: flex; justify-content: space-between; font-family: var(--num); font-variant-numeric: tabular-nums; color: var(--muted); font-size: .9rem; }
+.trim .vals b { color: var(--ink); }
+.swrow { display: grid; gap: 6px; }
+.swatches { display: flex; gap: 10px; flex-wrap: wrap; }
+.sw { width: 32px; height: 32px; border-radius: 50%; padding: 0; border: 3px solid var(--surface); box-shadow: 0 0 0 1px var(--line); }
+.sw[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--ink); }
+.logo-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: stretch; }
+.check { display: flex; gap: 8px; align-items: center; font-size: .9rem; color: var(--ink); font-weight: 400; }
+.preview { display: grid; gap: 12px; }
+.preview canvas { width: 100%; height: auto; aspect-ratio: 9 / 16; border-radius: 14px; display: block; max-width: 100%; background: #000; box-shadow: 0 10px 30px rgba(10, 30, 50, .18); }
+.ctrl { display: flex; gap: 8px; }
+.ctrl button { flex: 1; }
+.progress { height: 8px; border-radius: 8px; background: var(--bg); overflow: hidden; }
+.progress i { display: block; height: 100%; width: 0; background: var(--ball); }
+.hint { font-size: .8rem; color: var(--muted); margin: 0; }
+.hint.err { color: var(--err); }
+.savebar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: flex; gap: 10px;
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(8px); border-top: 1px solid var(--line);
+}
+.savebar a { flex: 0 0 auto; display: grid; place-items: center; padding: 0 14px; border-radius: 10px; border: 1px solid var(--line); color: var(--ink); text-decoration: none; font-weight: 700; }
+.savebar button { flex: 1; }
+video { display: none; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="eyebrow">Table Tennis · Reel Maker</div>
+    <h1>卓球リールメーカー</h1>
+    <p>試合の動画を入れて選手名を打つだけで、上下にタイトル帯の付いた縦長のリール動画ができあがり。</p>
+  </header>
+
+  <div class="cols">
+    <div class="form">
+      <section class="panel">
+        <h2><span class="step">1</span>動画を選ぶ</h2>
+        <label class="drop">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg>
+          <strong>プレーの動画を選ぶ</strong>
+          <span id="videoName">横向きの動画がいちばんきれいに収まります</span>
+          <input type="file" id="videoFile" accept="video/*">
+        </label>
+        <div class="trim" id="trim" hidden>
+          <label for="tStart">使う範囲（はじめ）<input type="range" id="tStart" min="0" max="1" step="0.1" value="0"></label>
+          <label for="tEnd">使う範囲（おわり）<input type="range" id="tEnd" min="0" max="1" step="0.1" value="1"></label>
+          <div class="vals"><span>はじめ <b id="vStart">0.0</b>秒</span><span>長さ <b id="vLen">0.0</b>秒</span><span>おわり <b id="vEnd">0.0</b>秒</span></div>
+          <label for="zoom">ズーム（選手を大きく）<input type="range" id="zoom" min="1" max="2" step="0.05" value="1"></label>
+          <label class="check" for="sound"><input type="checkbox" id="sound" checked> 元の音を入れる</label>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2><span class="step">2</span>文字を入れる</h2>
+        <div class="row2">
+          <label for="pA">選手（自チーム） <input type="text" id="pA" autocomplete="off"></label>
+          <label for="pB">選手（相手） <input type="text" id="pB" autocomplete="off"></label>
+        </div>
+        <label for="sub">見出し <input type="text" id="sub" autocomplete="off" placeholder="北信越リーグ 優勝決定戦"></label>
+        <div class="row2">
+          <label for="team">チーム名 <input type="text" id="team" autocomplete="off"></label>
+          <label for="teamEn">英語表記 <input type="text" id="teamEn" autocomplete="off"></label>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2><span class="step">3</span>色とロゴ</h2>
+        <div class="swrow"><label>自チームの選手名の色</label><div class="swatches" id="swA"></div></div>
+        <div class="swrow"><label>相手の選手名の色</label><div class="swatches" id="swB"></div></div>
+        <div class="swrow"><label>ライン（帯の線）の色</label><div class="swatches" id="swL"></div></div>
+        <div class="logo-row">
+          <label class="drop" style="padding:12px">
+            <strong style="font-size:.9rem">部のロゴを入れる</strong>
+            <span>チーム名の左に入ります</span>
+            <input type="file" id="logo" accept="image/*">
+          </label>
+          <button id="logoClear">ロゴを外す</button>
+        </div>
+      </section>
+    </div>
+
+    <aside class="panel preview" id="preview">
+      <h2>完成動画</h2>
+      <canvas id="cv" width="1080" height="1920" aria-label="リール動画のプレビュー"></canvas>
+      <div class="ctrl">
+        <button id="playBtn" disabled>再生</button>
+        <button class="primary" id="exportBtn" disabled>動画を書き出す</button>
+      </div>
+      <div class="progress" id="progress" hidden><i id="bar"></i></div>
+      <p class="hint" id="hint">動画を選ぶと、ここで仕上がりを確認できます。</p>
+    </aside>
+  </div>
+</div>
+
+<div class="savebar">
+  <a href="#preview">見る</a>
+  <button class="primary big" id="exportBtn2" disabled>動画を書き出す</button>
+</div>
+
+<video id="vid" playsinline preload="auto"></video>
+
+<script>
+const W = 1080, H = 1920;
+const JP = '"Noto Sans JP", "Hiragino Sans", sans-serif';
+const MIN = '"Shippori Mincho B1", "Hiragino Mincho ProN", serif';
+const BRUSH = '"Yuji Syuku", "Shippori Mincho B1", serif';
+const COLORS = ["#e8202a", "#ff8a1f", "#ffd23f", "#2fd17a", "#3d8bff", "#d23cff", "#ffffff"];
+const $ = (id) => document.getElementById(id);
+
+function load(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }
+function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+const DEFAULT = {
+  pA: "金澤", pB: "望月", sub: "北信越リーグ 一回戦",
+  team: "北陸大学卓球部", teamEn: "Hokuriku University Table Tennis Team",
+  colA: "#e8202a", colB: "#3d8bff", colL: "#ffd23f",
+};
+const s = Object.assign({}, DEFAULT, load("reel-state") || {});
+let logoImg = null;
+
+// ---------- form ----------
+for (const k of ["pA", "pB", "sub", "team", "teamEn"]) {
+  $(k).value = s[k];
+  $(k).addEventListener("input", e => { s[k] = e.target.value; store("reel-state", s); redraw(); });
+}
+function swatches(boxId, key) {
+  const box = $(boxId);
+  COLORS.forEach(c => {
+    const b = document.createElement("button"); b.className = "sw"; b.style.background = c; b.dataset.c = c;
+    b.setAttribute("aria-label", c);
+    b.onclick = () => { s[key] = c; store("reel-state", s); sync(); redraw(); };
+    box.append(b);
+  });
+  const sync = () => box.querySelectorAll(".sw").forEach(b => b.setAttribute("aria-pressed", b.dataset.c === s[key]));
+  sync();
+}
+swatches("swA", "colA"); swatches("swB", "colB"); swatches("swL", "colL");
+
+// ---------- drawing ----------
+const cv = $("cv"), ctx = cv.getContext("2d");
+const vid = $("vid");
+const VID_Y = 640, VID_H = 608; // 16:9 の枠
+let zoom = 1;
+
+function fit(text, weight, family, start, maxW, min = 28) {
+  let sz = start;
+  for (; sz > min; sz -= 2) { ctx.font = `${weight} ${sz}px ${family}`; if (ctx.measureText(text).width <= maxW) break; }
+  ctx.font = `${weight} ${sz}px ${family}`;
+  return sz;
+}
+function glowText(text, x, y, color) {
+  ctx.save();
+  ctx.shadowColor = color; ctx.shadowBlur = 18;
+  ctx.fillStyle = color; ctx.fillText(text, x, y);
+  ctx.restore();
+  ctx.lineWidth = 2; ctx.strokeStyle = "rgba(0,0,0,.35)"; ctx.strokeText(text, x, y);
+  ctx.fillStyle = color; ctx.fillText(text, x, y);
+}
+function band(y, color) {
+  const g = ctx.createLinearGradient(0, 0, W, 0);
+  g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(.12, color); g.addColorStop(.88, color); g.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = g; ctx.fillRect(0, y, W, 10);
+}
+
+function drawFrame() {
+  ctx.save();
+  ctx.fillStyle = "#050607"; ctx.fillRect(0, 0, W, H);
+  // うっすら卓球台のセンターライン
+  ctx.fillStyle = "rgba(255,255,255,.04)"; ctx.fillRect(W / 2 - 3, 0, 6, H);
+  ctx.textBaseline = "middle"; ctx.textAlign = "left";
+
+  // ---- 上の帯：選手 vs 選手 ----
+  band(170, s.colA); band(560, s.colA);
+  const vs = " vs ";
+  ctx.font = `800 108px ${MIN}`;
+  const a = s.pA || "", b = s.pB || "";
+  let size = 108;
+  for (; size > 40; size -= 2) {
+    ctx.font = `800 ${size}px ${MIN}`;
+    const wa = ctx.measureText(a).width, wb = ctx.measureText(b).width;
+    ctx.font = `700 ${size * 0.6}px "Oswald", sans-serif`;
+    if (wa + wb + ctx.measureText(vs).width <= W - 120) break;
+  }
+  ctx.font = `800 ${size}px ${MIN}`; const wa = ctx.measureText(a).width, wb = ctx.measureText(b).width;
+  ctx.font = `700 ${size * 0.6}px "Oswald", sans-serif`; const wv = ctx.measureText(vs).width;
+  let x = (W - (wa + wv + wb)) / 2;
+  const ny = 300;
+  ctx.font = `800 ${size}px ${MIN}`; glowText(a, x, ny, s.colA); x += wa;
+  ctx.font = `700 ${size * 0.6}px "Oswald", sans-serif`; ctx.fillStyle = "#ffffff"; ctx.fillText(vs, x, ny + size * 0.06); x += wv;
+  ctx.font = `800 ${size}px ${MIN}`; glowText(b, x, ny, s.colB);
+  // 見出し
+  ctx.textAlign = "center"; ctx.fillStyle = "#ffffff";
+  fit(s.sub || "", 900, JP, 96, W - 140);
+  ctx.save(); ctx.shadowColor = "rgba(0,0,0,.6)"; ctx.shadowBlur = 10; ctx.fillText(s.sub || "", W / 2, 445); ctx.restore();
+
+  // ---- 動画 ----
+  band(VID_Y - 22, s.colL); band(VID_Y + VID_H + 12, s.colL);
+  if (vid.readyState >= 2 && vid.videoWidth) {
+    const vw = vid.videoWidth, vh = vid.videoHeight;
+    const sc = Math.max(W / vw, VID_H / vh) * zoom; // 枠いっぱい（はみ出しは切る）
+    const dw = vw * sc, dh = vh * sc;
+    ctx.save(); ctx.beginPath(); ctx.rect(0, VID_Y, W, VID_H); ctx.clip();
+    ctx.drawImage(vid, (W - dw) / 2, VID_Y + (VID_H - dh) / 2, dw, dh);
+    ctx.restore();
+  } else {
+    // 動画がまだないとき：卓球台の絵
+    ctx.fillStyle = "#123f66"; ctx.fillRect(0, VID_Y, W, VID_H);
+    ctx.strokeStyle = "rgba(255,255,255,.85)"; ctx.lineWidth = 8; ctx.strokeRect(120, VID_Y + 110, W - 240, VID_H - 220);
+    ctx.beginPath(); ctx.moveTo(W / 2, VID_Y + 110); ctx.lineTo(W / 2, VID_Y + VID_H - 110); ctx.stroke();
+    ctx.fillStyle = "rgba(255,255,255,.75)"; ctx.font = `700 44px ${JP}`; ctx.fillText("ここにプレー動画が入ります", W / 2, VID_Y + 60);
+  }
+
+  // ---- 下：チーム名 ----
+  const ty = 1470;
+  const logoSize = 150;
+  ctx.textAlign = "left";
+  fit(s.team || "", 400, BRUSH, 112, W - 160 - (logoImg ? logoSize + 30 : 0));
+  const tw = ctx.measureText(s.team || "").width;
+  const total = tw + (logoImg ? logoSize + 30 : 0);
+  let tx = (W - total) / 2;
+  if (logoImg) {
+    const sc = Math.min(logoSize / logoImg.width, logoSize / logoImg.height);
+    ctx.drawImage(logoImg, tx + (logoSize - logoImg.width * sc) / 2, ty - logoImg.height * sc / 2, logoImg.width * sc, logoImg.height * sc);
+    tx += logoSize + 30;
+  }
+  ctx.fillStyle = "#ffffff"; ctx.fillText(s.team || "", tx, ty);
+  ctx.textAlign = "center"; ctx.fillStyle = "rgba(255,255,255,.75)";
+  fit(s.teamEn || "", 500, '"Shippori Mincho B1", serif', 34, W - 200);
+  ctx.save(); ctx.letterSpacing = "2px"; ctx.fillText(s.teamEn || "", W / 2, ty + 110); ctx.restore();
+  band(ty + 170, s.colA);
+  ctx.restore();
+}
+let drawing = false;
+function redraw() { if (!drawing) drawFrame(); }
+
+// ---------- video loading & trimming ----------
+let url = null;
+$("videoFile").onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  if (url) URL.revokeObjectURL(url);
+  url = URL.createObjectURL(f);
+  vid.src = url; vid.muted = false;
+  $("videoName").textContent = f.name;
+  hint("読み込み中…");
+};
+vid.addEventListener("loadedmetadata", () => {
+  const d = vid.duration || 0;
+  for (const id of ["tStart", "tEnd"]) { $(id).max = d.toFixed(1); }
+  $("tStart").value = 0; $("tEnd").value = d.toFixed(1);
+  $("trim").hidden = false;
+  updateTrim(); vid.currentTime = 0;
+  $("playBtn").disabled = false; $("exportBtn").disabled = false; $("exportBtn2").disabled = false;
+  hint(vid.videoHeight > vid.videoWidth
+    ? "縦向きの動画なので、上下が切れて真ん中が使われます。ズームで調整してください。"
+    : "使う範囲を選んで「動画を書き出す」を押してください。");
+});
+vid.addEventListener("error", () => hint("この動画は読み込めませんでした。MP4 か MOV の動画を選んでください。", true));
+vid.addEventListener("seeked", redraw);
+vid.addEventListener("loadeddata", redraw);
+function range() { return [Number($("tStart").value), Number($("tEnd").value)]; }
+function updateTrim() {
+  let [a, b] = range();
+  if (b - a < 0.5) { b = Math.min(Number($("tEnd").max), a + 0.5); $("tEnd").value = b; }
+  $("vStart").textContent = a.toFixed(1); $("vEnd").textContent = b.toFixed(1); $("vLen").textContent = (b - a).toFixed(1);
+}
+$("tStart").oninput = () => { updateTrim(); vid.currentTime = range()[0]; };
+$("tEnd").oninput = () => { updateTrim(); vid.currentTime = range()[1]; };
+$("zoom").oninput = e => { zoom = Number(e.target.value); redraw(); };
+
+// ---------- playback loop ----------
+function loop(onTick) {
+  drawing = true;
+  const step = () => {
+    drawFrame();
+    onTick?.();
+    if (!vid.paused && !vid.ended) {
+      vid.requestVideoFrameCallback ? vid.requestVideoFrameCallback(step) : requestAnimationFrame(step);
+    } else drawing = false;
+  };
+  step();
+}
+let previewing = false;
+$("playBtn").onclick = async () => {
+  if (!vid.paused) { vid.pause(); return; }
+  const [a, b] = range();
+  if (vid.currentTime < a || vid.currentTime >= b - 0.05) vid.currentTime = a;
+  previewing = true; vid.muted = !$("sound").checked;
+  try { await vid.play(); } catch { hint("再生できませんでした。もう一度押してください。", true); return; }
+  $("playBtn").textContent = "停止";
+  loop(() => { if (vid.currentTime >= range()[1]) vid.pause(); });
+};
+vid.addEventListener("pause", () => { $("playBtn").textContent = "再生"; previewing = false; });
+
+// ---------- export ----------
+let downloads = null, audioCtx = null, audioDest = null;
+function pickType() {
+  const types = ["video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm"];
+  return types.find(t => window.MediaRecorder?.isTypeSupported?.(t)) || "";
+}
+function hint(msg, err) { const h = $("hint"); h.textContent = msg; h.className = "hint" + (err ? " err" : ""); }
+let exporting = false;
+async function exportVideo() {
+  if (exporting) return;
+  if (!window.MediaRecorder || !cv.captureStream) { hint("このブラウザでは動画を書き出せません。iPhone の Safari か、パソコンの Chrome で開いてください。", true); return; }
+  const type = pickType();
+  const [a, b] = range();
+  exporting = true; [$("exportBtn"), $("exportBtn2"), $("playBtn")].forEach(x => x.disabled = true);
+  vid.pause(); vid.currentTime = a;
+  await new Promise(r => vid.addEventListener("seeked", r, { once: true }));
+  await document.fonts.ready;
+
+  const stream = cv.captureStream(30);
+  if ($("sound").checked) {
+    try {
+      if (!audioCtx) {
+        audioCtx = new AudioContext();
+        const src = audioCtx.createMediaElementSource(vid);
+        audioDest = audioCtx.createMediaStreamDestination();
+        src.connect(audioDest); src.connect(audioCtx.destination);
+      }
+      await audioCtx.resume();
+      audioDest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
+    } catch {}
+  }
+  const rec = new MediaRecorder(stream, { mimeType: type || undefined, videoBitsPerSecond: 8_000_000 });
+  const chunks = [];
+  rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+  const done = new Promise(r => rec.onstop = r);
+  $("progress").hidden = false; $("bar").style.width = "0";
+  hint("書き出し中… 画面を閉じたり、他のアプリに切り替えたりしないでください。");
+  vid.muted = false;
+  rec.start(500);
+  try { await vid.play(); } catch { rec.stop(); }
+  loop(() => {
+    $("bar").style.width = Math.min(100, (vid.currentTime - a) / (b - a) * 100) + "%";
+    if (vid.currentTime >= b && rec.state === "recording") { vid.pause(); rec.stop(); }
+  });
+  vid.addEventListener("ended", () => rec.state === "recording" && rec.stop(), { once: true });
+  await done;
+  stream.getTracks().forEach(t => t.kind === "video" && t.stop());
+  const mime = rec.mimeType || type || "video/webm";
+  const ext = mime.includes("mp4") ? "mp4" : "webm";
+  const blob = new Blob(chunks, { type: mime });
+  const name = `${s.pA || "player"}_vs_${s.pB || ""}.${ext}`.replace(/[\\/:*?"<>|\s]/g, "_");
+  $("bar").style.width = "100%";
+  await deliver(blob, name, ext);
+  exporting = false; [$("exportBtn"), $("exportBtn2"), $("playBtn")].forEach(x => x.disabled = false);
+}
+async function deliver(blob, name, ext) {
+  const note = ext === "webm" ? "（このブラウザは WebM 形式で保存します。インスタに上げられない場合は iPhone で書き出してください）" : "";
+  if (downloads) {
+    try { await downloads.save({ filename: name, data: blob }); hint("保存しました。インスタの投稿（リール）でこの動画を選んでください。" + note); return; }
+    catch (e) { if (e?.code === "declined") { hint("保存をやめました。もう一度「動画を書き出す」を押せば作り直せます。"); return; } }
+  } else if (!window.claude) {
+    const file = new File([blob], name, { type: blob.type });
+    if (navigator.canShare?.({ files: [file] })) {
+      try { await navigator.share({ files: [file] }); hint("共有メニューから「Instagram」や「ビデオを保存」を選べます。" + note); return; }
+      catch (e) { if (e?.name === "AbortError") return; }
+    }
+    const link = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: name });
+    document.body.append(link); link.click(); link.remove();
+    hint("ダウンロードしました。" + note); return;
+  }
+  hint("この画面では保存できませんでした。", true);
+}
+$("exportBtn").onclick = exportVideo;
+$("exportBtn2").onclick = exportVideo;
+
+// ---------- logo ----------
+function setLogo(u) {
+  if (!u) { logoImg = null; redraw(); return; }
+  const img = new Image(); img.onload = () => { logoImg = img; redraw(); }; img.src = u;
+}
+$("logo").onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const img = new Image();
+  img.onload = () => {
+    const sc = Math.min(1, 400 / Math.max(img.width, img.height));
+    const c = document.createElement("canvas"); c.width = img.width * sc; c.height = img.height * sc;
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    const u = c.toDataURL("image/png");
+    try { localStorage.setItem("reel-logo", u); } catch {}
+    setLogo(u); URL.revokeObjectURL(img.src);
+  };
+  img.src = URL.createObjectURL(f);
+};
+$("logoClear").onclick = () => { try { localStorage.removeItem("reel-logo"); } catch {} setLogo(null); };
+
+// ---------- boot ----------
+drawFrame();
+Promise.all([
+  document.fonts.load(`800 80px "Shippori Mincho B1"`, "金澤望月"),
+  document.fonts.load(`900 80px "Noto Sans JP"`, "北信越リーグ"),
+  document.fonts.load(`400 80px "Yuji Syuku"`, "北陸大学卓球部"),
+  document.fonts.load(`700 80px "Oswald"`, "vs"),
+]).then(redraw).catch(() => {});
+try { const l = localStorage.getItem("reel-logo"); if (l) setLogo(l); } catch {}
+(async () => { if (window.claude) downloads = await claude.use("downloads"); })();
+</script>

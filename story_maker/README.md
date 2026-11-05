@@ -58,3 +58,10 @@ python publish_story.py https://example.com/story.png
 - **GitHub Pages 版**（ログイン不要・名前は手入力）: Settings → Pages → Source を「GitHub Actions」にすると、
   `.github/workflows/story-maker-pages.yml` が `https://0313akira.github.io/Python-game-/` に公開する。
   iPhone では「画像を保存」から共有メニューを開き、そのままインスタに送れる。
+
+## リール動画テンプレート（`web/reel.html`）
+
+フィード投稿（リール）用。試合の動画を選び、選手名・見出しを入れると、上に「選手 vs 選手」と見出し、
+真ん中にプレー動画、下にチーム名の帯が付いた 1080×1920 の動画を書き出す。
+使う範囲（はじめ・おわり）とズームを選べる。書き出しは再生しながら録画するので、動画の長さと同じだけ時間がかかる。
+GitHub Pages では `https://0313akira.github.io/Python-game-/reel.html` に公開される。
